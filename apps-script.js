@@ -1,4 +1,4 @@
-// VIBE Quiniela Mundial 2026 - Apps Script API v2
+// VIBE Quiniela Mundial 2026 - Apps Script API v3 (con auth)
 // Pegar en Extensions > Apps Script
 // Deploy > Manage deployments > Edit (lapiz) > Version: New version > Deploy
 
@@ -10,7 +10,7 @@ function getSheet(name) {
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    if (name === 'Participantes') sheet.appendRow(['id','alias','nombre','email','equipo_favorito','fecha_registro']);
+    if (name === 'Participantes') sheet.appendRow(['id','alias','nombre','email','equipo_favorito','fecha_registro','password_hash']);
     if (name === 'Predicciones') sheet.appendRow(['participante_id','partido_id','gol_local','gol_visitante','timestamp']);
     if (name === 'Partidos') sheet.appendRow(['partido_id','fase','grupo','fecha','hora','local','visitante','gol_local','gol_visitante','status']);
     if (name === 'Campeon') sheet.appendRow(['participante_id','equipo','timestamp']);
@@ -38,6 +38,9 @@ function doPost(e) {
   let result;
   try {
     if (data.action === 'register') result = registerUser(data);
+    else if (data.action === 'login') result = loginUser(data);
+    else if (data.action === 'setPassword') result = setPassword(data);
+    else if (data.action === 'changePassword') result = changePassword(data);
     else if (data.action === 'predict') result = savePrediction(data);
     else if (data.action === 'saveChampion') result = saveChampion(data);
     else result = { error: 'unknown action' };
@@ -59,13 +62,59 @@ function checkAlias(alias) {
 }
 
 function registerUser(data) {
+  if (!data.alias || !data.nombre || !data.email || !data.password_hash) return { error: 'missing fields' };
   const sheet = getSheet('Participantes');
   const users = getData('Participantes');
   if (users.some(u => u.alias.toLowerCase() === data.alias.toLowerCase())) return { error: 'alias already taken' };
   if (users.some(u => u.email.toLowerCase() === data.email.toLowerCase())) return { error: 'email already registered' };
   const id = 'P' + Date.now();
-  sheet.appendRow([id, data.alias, data.nombre, data.email, data.equipo || '', new Date().toISOString()]);
-  return { ok: true, id: id, alias: data.alias };
+  sheet.appendRow([id, data.alias, data.nombre, data.email, data.equipo || '', new Date().toISOString(), data.password_hash]);
+  return { ok: true, id: id, alias: data.alias, nombre: data.nombre };
+}
+
+function loginUser(data) {
+  if (!data.alias || !data.password_hash) return { error: 'missing fields' };
+  const users = getData('Participantes');
+  const user = users.find(u => u.alias.toLowerCase() === data.alias.toLowerCase());
+  if (!user) return { error: 'user not found' };
+  // si no tiene hash ~ necesita crear password (reset por admin)
+  if (!user.password_hash) return { needsPassword: true, id: user.id, alias: user.alias };
+  if (user.password_hash !== data.password_hash) return { error: 'wrong password' };
+  return { ok: true, id: user.id, alias: user.alias, nombre: user.nombre };
+}
+
+function setPassword(data) {
+  // solo funciona si el hash esta vacio (reset por admin)
+  if (!data.alias || !data.password_hash) return { error: 'missing fields' };
+  const sheet = getSheet('Participantes');
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const hashCol = headers.indexOf('password_hash') + 1;
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][headers.indexOf('alias')].toLowerCase() === data.alias.toLowerCase()) {
+      if (rows[i][hashCol - 1]) return { error: 'password already set' };
+      sheet.getRange(i + 1, hashCol).setValue(data.password_hash);
+      return { ok: true, id: rows[i][headers.indexOf('id')], alias: rows[i][headers.indexOf('alias')], nombre: rows[i][headers.indexOf('nombre')] };
+    }
+  }
+  return { error: 'user not found' };
+}
+
+function changePassword(data) {
+  if (!data.pid || !data.old_hash || !data.new_hash) return { error: 'missing fields' };
+  const sheet = getSheet('Participantes');
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const hashCol = headers.indexOf('password_hash') + 1;
+  const idCol = headers.indexOf('id');
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idCol] === data.pid) {
+      if (rows[i][hashCol - 1] !== data.old_hash) return { error: 'wrong current password' };
+      sheet.getRange(i + 1, hashCol).setValue(data.new_hash);
+      return { ok: true };
+    }
+  }
+  return { error: 'user not found' };
 }
 
 function savePrediction(data) {
@@ -120,7 +169,6 @@ function calcLeaderboard() {
   const predicciones = getData('Predicciones');
   const users = getData('Participantes');
   const campeonPicks = getData('Campeon');
-  // check if there is a winner set in Config
   const config = getData('Config');
   const winnerRow = config.find(c => c.key === 'campeon_real');
   const realWinner = winnerRow ? winnerRow.value : null;
@@ -128,7 +176,6 @@ function calcLeaderboard() {
   const scores = {};
   users.forEach(u => { scores[u.id] = { alias: u.alias, nombre: u.nombre, exactos: 0, aciertos: 0, campeon: '', puntos: 0 }; });
 
-  // match points
   partidos.forEach(p => {
     const rL = Number(p.gol_local), rV = Number(p.gol_visitante);
     const realW = rL > rV ? 'L' : rL < rV ? 'V' : 'E';
@@ -141,7 +188,6 @@ function calcLeaderboard() {
     });
   });
 
-  // champion bonus
   campeonPicks.forEach(cp => {
     if (!scores[cp.participante_id]) return;
     scores[cp.participante_id].campeon = cp.equipo;

@@ -28,7 +28,8 @@
     <div class="nav-right">
       <button class="lang-toggle" id="langToggle">ES</button>
       <div class="nav-user" id="navUser">
-        <button class="btn btn-glow btn-sm" id="btnLogin" data-i18n="nav_register">Register</button>
+        <button class="btn btn-glass btn-sm" onclick="openLogin()" data-i18n="nav_login">Login</button>
+        <button class="btn btn-glow btn-sm" onclick="openRegister()" data-i18n="nav_register">Register</button>
       </div>
     </div>
   </div>
@@ -128,20 +129,67 @@
   </div>
 </section>
 
-<div class="modal-overlay" id="modalOverlay">
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="registerOverlay">
   <div class="glass-card modal">
-    <div class="modal-header"><h3 class="gradient-text" data-i18n="reg_title">Register</h3><button class="modal-close" id="modalClose">&times;</button></div>
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="reg_title">Register</h3><button class="modal-close" id="registerClose">&times;</button></div>
     <form id="registerForm">
       <div class="form-group"><label data-i18n="reg_alias">Alias (Amazon)</label><input type="text" id="regAlias" required maxlength="20" placeholder="e.g. varseana"></div>
       <div class="form-group"><label data-i18n="reg_name">Full Name</label><input type="text" id="regNombre" required placeholder="e.g. Sean Vargas"></div>
       <div class="form-group"><label data-i18n="reg_email">Email (Amazon)</label><input type="email" id="regEmail" required placeholder="e.g. username@amazon.com"></div>
+      <div class="form-group"><label data-i18n="reg_password">Password</label><input type="password" id="regPassword" required minlength="4" placeholder="Min 4 characters"></div>
+      <div class="form-group"><label data-i18n="reg_password_confirm">Confirm Password</label><input type="password" id="regPasswordConfirm" required minlength="4"></div>
       <div class="form-group"><label data-i18n="reg_team">Favorite Team (optional)</label><input type="text" id="regEquipo" placeholder="e.g. Costa Rica"></div>
       <button type="submit" class="btn btn-glow btn-full" data-i18n="reg_submit">Register</button>
-      <p class="form-msg" id="formMsg"></p>
+      <p class="form-msg" id="regMsg"></p>
+      <p class="form-switch"><a href="#" id="switchToLogin" data-i18n="reg_switch">Already have an account? Login</a></p>
     </form>
   </div>
 </div>
 
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="login_title">Login</h3><button class="modal-close" id="loginClose">&times;</button></div>
+    <form id="loginForm">
+      <div class="form-group"><label data-i18n="login_alias">Alias</label><input type="text" id="loginAlias" required maxlength="20" placeholder="e.g. varseana"></div>
+      <div class="form-group"><label data-i18n="login_password">Password</label><input type="password" id="loginPassword" required></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="login_submit">Login</button>
+      <p class="form-msg" id="loginMsg"></p>
+      <p class="form-switch"><a href="#" id="switchToRegister" data-i18n="login_switch">Don't have an account? Register</a></p>
+    </form>
+  </div>
+</div>
+
+<!-- SET PASSWORD MODAL (after admin reset) -->
+<div class="modal-overlay" id="setPasswordOverlay">
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="set_pw_title">Set Your Password</h3><button class="modal-close" id="setPwClose">&times;</button></div>
+    <p class="modal-desc" data-i18n="set_pw_desc">Your password was reset. Please create a new one.</p>
+    <form id="setPasswordForm">
+      <div class="form-group"><label data-i18n="reg_password">Password</label><input type="password" id="setPwPassword" required minlength="4" placeholder="Min 4 characters"></div>
+      <div class="form-group"><label data-i18n="reg_password_confirm">Confirm Password</label><input type="password" id="setPwPasswordConfirm" required minlength="4"></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="set_pw_submit">Set Password</button>
+      <p class="form-msg" id="setPwMsg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="changePasswordOverlay">
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="chg_pw_title">Change Password</h3><button class="modal-close" id="chgPwClose">&times;</button></div>
+    <form id="changePasswordForm">
+      <div class="form-group"><label data-i18n="chg_pw_current">Current Password</label><input type="password" id="chgPwCurrent" required></div>
+      <div class="form-group"><label data-i18n="chg_pw_new">New Password</label><input type="password" id="chgPwNew" required minlength="4"></div>
+      <div class="form-group"><label data-i18n="chg_pw_confirm">Confirm New Password</label><input type="password" id="chgPwConfirm" required minlength="4"></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="chg_pw_submit">Change</button>
+      <p class="form-msg" id="chgPwMsg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- PREDICT MODAL -->
 <div class="modal-overlay" id="predictOverlay">
   <div class="glass-card modal">
     <div class="modal-header"><h3 class="gradient-text" id="predictTitle">Prediction</h3><button class="modal-close" id="predictClose">&times;</button></div>

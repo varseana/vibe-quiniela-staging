@@ -8,7 +8,7 @@ const TEAMS = ['Algeria','Argentina','Australia','Austria','Belgium','Bosnia and
 // i18n
 const T = {
   en: {
-    nav_home:'Home', nav_champion:'Champion', nav_matches:'Matches', nav_rules:'Rules', nav_register:'Register',
+    nav_home:'Home', nav_champion:'Champion', nav_matches:'Matches', nav_rules:'Rules', nav_register:'Register', nav_login:'Login',
     hero_title:'World Cup Predictions 2026', hero_sub:'Predict the results of the FIFA World Cup USA/Mexico/Canada. Compete with all of TSE. Win prizes.',
     days:'Days', hours:'Hours', hero_join:'Join the Pool', hero_rules:'View Rules',
     champ_badge:'Bonus', champ_title:'Pick Your Champion', champ_desc:'Choose who you think will win the World Cup. Worth 10 bonus points. Locks when the tournament starts.',
@@ -22,11 +22,16 @@ const T = {
     r1:'Predictions close 1 hour before each match.', r2:'Only one prediction per match.', r3:'You can modify your prediction before the deadline.',
     r4:'Tiebreaker: most exact results wins.', r5:'Prizes will be announced at the start of the tournament.', r6:'Champion pick locks on June 11, 2026. No changes after that.',
     reg_title:'Register', reg_alias:'Alias (Amazon)', reg_name:'Full Name', reg_email:'Email (Amazon)', reg_team:'Favorite Team (optional)', reg_submit:'Register',
+    reg_password:'Password', reg_password_confirm:'Confirm Password', password_mismatch:'Passwords do not match', password_short:'Password must be at least 4 characters',
+    login_title:'Login', login_alias:'Alias', login_password:'Password', login_submit:'Login', login_switch:'Don\'t have an account? Register',
+    reg_switch:'Already have an account? Login',
+    set_pw_title:'Set Your Password', set_pw_desc:'Your password was reset. Please create a new one.', set_pw_submit:'Set Password',
     pred_submit:'Submit Prediction',
-    btn_logout:'Logout', your_pick:'Your pick:', no_pick:'No pick yet', saved:'Saved!', sending:'Sending...', registering:'Registering...', registered:'Registered!', conn_err:'Connection error',
+    btn_logout:'Logout', btn_change_pw:'Change Password', your_pick:'Your pick:', no_pick:'No pick yet', saved:'Saved!', sending:'Sending...', registering:'Registering...', registered:'Registered!', conn_err:'Connection error', logging_in:'Logging in...', logged_in:'Welcome back!',
+    chg_pw_title:'Change Password', chg_pw_current:'Current Password', chg_pw_new:'New Password', chg_pw_confirm:'Confirm New Password', chg_pw_submit:'Change', pw_changed:'Password changed!',
   },
   es: {
-    nav_home:'Inicio', nav_champion:'Campeon', nav_matches:'Partidos', nav_rules:'Reglas', nav_register:'Registrarse',
+    nav_home:'Inicio', nav_champion:'Campeon', nav_matches:'Partidos', nav_rules:'Reglas', nav_register:'Registrarse', nav_login:'Ingresar',
     hero_title:'Quiniela Mundial 2026', hero_sub:'Predice los resultados del Mundial USA/Mexico/Canada. Compite con todo TSE. Gana premios.',
     days:'Dias', hours:'Horas', hero_join:'Unirme a la Quiniela', hero_rules:'Ver Reglas',
     champ_badge:'Bonus', champ_title:'Elige al Campeon', champ_desc:'Elige quien crees que ganara el Mundial. Vale 10 puntos bonus. Se bloquea al iniciar el torneo.',
@@ -40,8 +45,13 @@ const T = {
     r1:'Las predicciones se cierran 1 hora antes de cada partido.', r2:'Solo una prediccion por partido.', r3:'Se puede modificar la prediccion antes del cierre.',
     r4:'Desempate: gana quien tenga mas resultados exactos.', r5:'Los premios se anuncian al inicio del torneo.', r6:'La prediccion de campeon se bloquea el 11 de junio, 2026.',
     reg_title:'Registro', reg_alias:'Alias (de Amazon)', reg_name:'Nombre Completo', reg_email:'Email (de Amazon)', reg_team:'Equipo favorito (opcional)', reg_submit:'Registrarme',
+    reg_password:'Contrasena', reg_password_confirm:'Confirmar Contrasena', password_mismatch:'Las contrasenas no coinciden', password_short:'La contrasena debe tener al menos 4 caracteres',
+    login_title:'Ingresar', login_alias:'Alias', login_password:'Contrasena', login_submit:'Ingresar', login_switch:'No tienes cuenta? Registrate',
+    reg_switch:'Ya tienes cuenta? Ingresar',
+    set_pw_title:'Crear Contrasena', set_pw_desc:'Tu contrasena fue reiniciada. Crea una nueva.', set_pw_submit:'Guardar Contrasena',
     pred_submit:'Enviar Prediccion',
-    btn_logout:'Salir', your_pick:'Tu eleccion:', no_pick:'Sin eleccion aun', saved:'Guardado!', sending:'Enviando...', registering:'Registrando...', registered:'Registrado!', conn_err:'Error de conexion',
+    btn_logout:'Salir', btn_change_pw:'Cambiar Contrasena', your_pick:'Tu eleccion:', no_pick:'Sin eleccion aun', saved:'Guardado!', sending:'Enviando...', registering:'Registrando...', registered:'Registrado!', conn_err:'Error de conexion', logging_in:'Ingresando...', logged_in:'Bienvenido!',
+    chg_pw_title:'Cambiar Contrasena', chg_pw_current:'Contrasena Actual', chg_pw_new:'Nueva Contrasena', chg_pw_confirm:'Confirmar Nueva', chg_pw_submit:'Cambiar', pw_changed:'Contrasena cambiada!',
   }
 };
 
@@ -56,14 +66,20 @@ function setLang(l) {
 }
 document.getElementById('langToggle').addEventListener('click', () => setLang(lang === 'en' ? 'es' : 'en'));
 
+// hash password (sha-256)
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // user
 function getUser() { try { return JSON.parse(localStorage.getItem('vibe_user')); } catch { return null; } }
 function setUser(u) { localStorage.setItem('vibe_user', JSON.stringify(u)); updateUserUI(); }
 function logout() { localStorage.removeItem('vibe_user'); updateUserUI(); updateChampionUI(); }
 function updateUserUI() {
   const u = getUser(), nav = document.getElementById('navUser');
-  if (u) nav.innerHTML = `<span class="user-alias">${u.alias}</span> <button class="btn btn-glass btn-sm" onclick="logout()">${t('btn_logout')}</button>`;
-  else nav.innerHTML = `<button class="btn btn-glow btn-sm" onclick="openRegister()">${t('nav_register')}</button>`;
+  if (u) nav.innerHTML = `<span class="user-alias">${u.alias}</span> <button class="btn btn-glass btn-sm" onclick="openChangePassword()">${t('btn_change_pw')}</button> <button class="btn btn-glass btn-sm" onclick="logout()">${t('btn_logout')}</button>`;
+  else nav.innerHTML = `<button class="btn btn-glass btn-sm" onclick="openLogin()">${t('nav_login')}</button> <button class="btn btn-glow btn-sm" onclick="openRegister()">${t('nav_register')}</button>`;
 }
 
 // api
@@ -88,10 +104,16 @@ function startCountdown() {
 }
 
 // modals
-function openRegister() { document.getElementById('modalOverlay').classList.add('open'); }
-function closeRegister() { document.getElementById('modalOverlay').classList.remove('open'); }
+function openRegister() { document.getElementById('registerOverlay').classList.add('open'); }
+function closeRegister() { document.getElementById('registerOverlay').classList.remove('open'); }
+function openLogin() { document.getElementById('loginOverlay').classList.add('open'); }
+function closeLogin() { document.getElementById('loginOverlay').classList.remove('open'); }
+function openSetPassword() { document.getElementById('setPasswordOverlay').classList.add('open'); }
+function closeSetPassword() { document.getElementById('setPasswordOverlay').classList.remove('open'); }
+function openChangePassword() { document.getElementById('changePasswordOverlay').classList.add('open'); }
+function closeChangePassword() { document.getElementById('changePasswordOverlay').classList.remove('open'); }
 function openPredict(p) {
-  if (!getUser()) { openRegister(); return; }
+  if (!getUser()) { openLogin(); return; }
   document.getElementById('predPartidoId').value = p.partido_id;
   document.getElementById('predLocal').textContent = p.local;
   document.getElementById('predVisitante').textContent = p.visitante;
@@ -106,21 +128,93 @@ function closePredict() { document.getElementById('predictOverlay').classList.re
 // register
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const msg = document.getElementById('formMsg');
+  const msg = document.getElementById('regMsg');
+  const pw = document.getElementById('regPassword').value;
+  const pwConfirm = document.getElementById('regPasswordConfirm').value;
+  if (pw.length < 4) { msg.textContent = t('password_short'); msg.className = 'form-msg error'; return; }
+  if (pw !== pwConfirm) { msg.textContent = t('password_mismatch'); msg.className = 'form-msg error'; return; }
   msg.textContent = t('registering'); msg.className = 'form-msg';
   try {
-    const res = await apiPost({ action:'register', alias:document.getElementById('regAlias').value.trim(), nombre:document.getElementById('regNombre').value.trim(), email:document.getElementById('regEmail').value.trim(), equipo:document.getElementById('regEquipo').value.trim() });
+    const hash = await hashPassword(pw);
+    const res = await apiPost({ action:'register', alias:document.getElementById('regAlias').value.trim(), nombre:document.getElementById('regNombre').value.trim(), email:document.getElementById('regEmail').value.trim(), equipo:document.getElementById('regEquipo').value.trim(), password_hash:hash });
     if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
-    setUser({ id: res.id, alias: res.alias });
+    setUser({ id: res.id, alias: res.alias, nombre: res.nombre });
     msg.textContent = t('registered'); msg.className = 'form-msg success';
     setTimeout(closeRegister, 1000);
+  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
+});
+
+// login
+let _pendingLoginAlias = '';
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('loginMsg');
+  const alias = document.getElementById('loginAlias').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  if (!alias || !pw) return;
+  msg.textContent = t('logging_in'); msg.className = 'form-msg';
+  try {
+    const hash = await hashPassword(pw);
+    const res = await apiPost({ action:'login', alias, password_hash:hash });
+    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    if (res.needsPassword) {
+      _pendingLoginAlias = alias;
+      closeLogin();
+      openSetPassword();
+      return;
+    }
+    setUser({ id: res.id, alias: res.alias, nombre: res.nombre });
+    msg.textContent = t('logged_in'); msg.className = 'form-msg success';
+    updateChampionUI();
+    setTimeout(closeLogin, 1000);
+  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
+});
+
+// set password (after admin reset)
+document.getElementById('setPasswordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('setPwMsg');
+  const pw = document.getElementById('setPwPassword').value;
+  const pwConfirm = document.getElementById('setPwPasswordConfirm').value;
+  if (pw.length < 4) { msg.textContent = t('password_short'); msg.className = 'form-msg error'; return; }
+  if (pw !== pwConfirm) { msg.textContent = t('password_mismatch'); msg.className = 'form-msg error'; return; }
+  msg.textContent = t('sending'); msg.className = 'form-msg';
+  try {
+    const hash = await hashPassword(pw);
+    const res = await apiPost({ action:'setPassword', alias:_pendingLoginAlias, password_hash:hash });
+    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    setUser({ id: res.id, alias: res.alias, nombre: res.nombre });
+    msg.textContent = t('saved'); msg.className = 'form-msg success';
+    updateChampionUI();
+    setTimeout(closeSetPassword, 1000);
+  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
+});
+
+// change password
+document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('chgPwMsg');
+  const u = getUser(); if (!u) return;
+  const oldPw = document.getElementById('chgPwCurrent').value;
+  const newPw = document.getElementById('chgPwNew').value;
+  const newPwConfirm = document.getElementById('chgPwConfirm').value;
+  if (newPw.length < 4) { msg.textContent = t('password_short'); msg.className = 'form-msg error'; return; }
+  if (newPw !== newPwConfirm) { msg.textContent = t('password_mismatch'); msg.className = 'form-msg error'; return; }
+  msg.textContent = t('sending'); msg.className = 'form-msg';
+  try {
+    const oldHash = await hashPassword(oldPw);
+    const newHash = await hashPassword(newPw);
+    const res = await apiPost({ action:'changePassword', pid:u.id, old_hash:oldHash, new_hash:newHash });
+    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    msg.textContent = t('pw_changed'); msg.className = 'form-msg success';
+    setTimeout(closeChangePassword, 1500);
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
 // predict
 document.getElementById('predictForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const u = getUser(); if (!u) { openRegister(); return; }
+  const u = getUser(); if (!u) { openLogin(); return; }
   const msg = document.getElementById('predictMsg');
   msg.textContent = t('sending'); msg.className = 'form-msg';
   try {
@@ -155,7 +249,7 @@ async function loadChampion() {
   } catch {}
 }
 document.getElementById('btnChampion').addEventListener('click', async () => {
-  const u = getUser(); if (!u) { openRegister(); return; }
+  const u = getUser(); if (!u) { openLogin(); return; }
   const team = document.getElementById('championSelect').value;
   if (!team) return;
   const msg = document.getElementById('championMsg');
@@ -205,12 +299,22 @@ async function loadLeaderboard() {
   } catch { document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="6" class="placeholder-text">Error</td></tr>'; }
 }
 
-// modal close
-document.getElementById('modalClose').addEventListener('click', closeRegister);
-document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeRegister(); });
+// modal close handlers
+document.getElementById('registerClose').addEventListener('click', closeRegister);
+document.getElementById('registerOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeRegister(); });
+document.getElementById('loginClose').addEventListener('click', closeLogin);
+document.getElementById('loginOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeLogin(); });
+document.getElementById('setPwClose').addEventListener('click', closeSetPassword);
+document.getElementById('setPasswordOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSetPassword(); });
+document.getElementById('chgPwClose').addEventListener('click', closeChangePassword);
+document.getElementById('changePasswordOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeChangePassword(); });
 document.getElementById('predictClose').addEventListener('click', closePredict);
 document.getElementById('predictOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closePredict(); });
 document.getElementById('btnRegister').addEventListener('click', () => { getUser() ? document.getElementById('partidos').scrollIntoView({behavior:'smooth'}) : openRegister(); });
+
+// switch between login/register
+document.getElementById('switchToLogin').addEventListener('click', (e) => { e.preventDefault(); closeRegister(); openLogin(); });
+document.getElementById('switchToRegister').addEventListener('click', (e) => { e.preventDefault(); closeLogin(); openRegister(); });
 
 // nav scroll
 const nav = document.getElementById('nav');
