@@ -1,5 +1,5 @@
 // VIBE Quiniela Mundial 2026
-const API_URL = 'https://script.google.com/macros/s/AKfycbx9Gbm_HIw5ApGTqc4s_t1RuYW1HscdcuWBr9TnzTOHwy-0QJ4DM-y6xR6p1gwX29qZ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz8n6l5VVuka3r8yJFXyNsO1i2sAKEBqolcteCx95O90y4FCpnqo66Zh4BKHRUhGCY8/exec';
 const LOCK_DATE = new Date('2026-06-11T00:00:00-06:00'); // CST
 
 // 48 teams
