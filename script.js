@@ -27,7 +27,7 @@ const T = {
     reg_switch:'Already have an account? Login',
     set_pw_title:'Set Your Password', set_pw_desc:'Your password was reset. Please create a new one.', set_pw_submit:'Set Password',
     pred_submit:'Submit Prediction',
-    btn_logout:'Logout', btn_change_pw:'Change Password', your_pick:'Your pick:', no_pick:'No pick yet', saved:'Saved!', sending:'Sending...', registering:'Registering...', registered:'Registered!', conn_err:'Connection error', logging_in:'Logging in...', logged_in:'Welcome back!',
+    btn_logout:'Logout', btn_change_pw:'Change Password', your_pick:'Your pick:', no_pick:'No pick yet', saved:'Saved!', sending:'Sending...', registering:'Registering...', registered:'Registered!', conn_err:'Connection error', logging_in:'Logging in...', logged_in:'Welcome back!', your_pred:'Your prediction',
     chg_pw_title:'Change Password', chg_pw_current:'Current Password', chg_pw_new:'New Password', chg_pw_confirm:'Confirm New Password', chg_pw_submit:'Change', pw_changed:'Password changed!',
   },
   es: {
@@ -50,7 +50,7 @@ const T = {
     reg_switch:'Ya tienes cuenta? Ingresar',
     set_pw_title:'Crear Contrasena', set_pw_desc:'Tu contrasena fue reiniciada. Crea una nueva.', set_pw_submit:'Guardar Contrasena',
     pred_submit:'Enviar Prediccion',
-    btn_logout:'Salir', btn_change_pw:'Cambiar Contrasena', your_pick:'Tu eleccion:', no_pick:'Sin eleccion aun', saved:'Guardado!', sending:'Enviando...', registering:'Registrando...', registered:'Registrado!', conn_err:'Error de conexion', logging_in:'Ingresando...', logged_in:'Bienvenido!',
+    btn_logout:'Salir', btn_change_pw:'Cambiar Contrasena', your_pick:'Tu eleccion:', no_pick:'Sin eleccion aun', saved:'Guardado!', sending:'Enviando...', registering:'Registrando...', registered:'Registrado!', conn_err:'Error de conexion', logging_in:'Ingresando...', logged_in:'Bienvenido!', your_pred:'Tu prediccion',
     chg_pw_title:'Cambiar Contrasena', chg_pw_current:'Contrasena Actual', chg_pw_new:'Nueva Contrasena', chg_pw_confirm:'Confirmar Nueva', chg_pw_submit:'Cambiar', pw_changed:'Contrasena cambiada!',
   }
 };
@@ -118,8 +118,9 @@ function openPredict(p) {
   document.getElementById('predLocal').textContent = p.local;
   document.getElementById('predVisitante').textContent = p.visitante;
   document.getElementById('predictTitle').textContent = `${p.local} vs ${p.visitante}`;
-  document.getElementById('predGolLocal').value = '';
-  document.getElementById('predGolVisitante').value = '';
+  const existing = userPredictions[p.partido_id];
+  document.getElementById('predGolLocal').value = existing ? existing.gol_local : '';
+  document.getElementById('predGolVisitante').value = existing ? existing.gol_visitante : '';
   document.getElementById('predictMsg').textContent = '';
   document.getElementById('predictOverlay').classList.add('open');
 }
@@ -216,10 +217,15 @@ document.getElementById('predictForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const u = getUser(); if (!u) { openLogin(); return; }
   const msg = document.getElementById('predictMsg');
+  const partidoId = document.getElementById('predPartidoId').value;
+  const golL = Number(document.getElementById('predGolLocal').value);
+  const golV = Number(document.getElementById('predGolVisitante').value);
   msg.textContent = t('sending'); msg.className = 'form-msg';
   try {
-    const res = await apiPost({ action:'predict', pid:u.id, partido_id:document.getElementById('predPartidoId').value, gol_local:Number(document.getElementById('predGolLocal').value), gol_visitante:Number(document.getElementById('predGolVisitante').value) });
+    const res = await apiPost({ action:'predict', pid:u.id, partido_id:partidoId, gol_local:golL, gol_visitante:golV });
     if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    userPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
+    renderPartidos(getFilteredPartidos());
     msg.textContent = t('saved'); msg.className = 'form-msg success';
     setTimeout(closePredict, 1000);
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
@@ -266,22 +272,41 @@ document.getElementById('btnChampion').addEventListener('click', async () => {
 // partidos
 let allPartidos = [];
 let activeFilter = 'all';
+let userPredictions = {}; // { partido_id: { gol_local, gol_visitante } }
+
+async function loadUserPredictions() {
+  const u = getUser(); if (!u) { userPredictions = {}; return; }
+  try {
+    const preds = await apiGet('getPredicciones', { pid: u.id });
+    userPredictions = {};
+    preds.forEach(p => { userPredictions[p.partido_id] = { gol_local: p.gol_local, gol_visitante: p.gol_visitante }; });
+  } catch { userPredictions = {}; }
+}
+
 function getFilteredPartidos() { return activeFilter === 'all' ? allPartidos : allPartidos.filter(p => p.status === activeFilter); }
 async function loadPartidos() {
-  try { allPartidos = await apiGet('getPartidos'); renderPartidos(allPartidos); }
-  catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
+  try {
+    allPartidos = await apiGet('getPartidos');
+    await loadUserPredictions();
+    renderPartidos(getFilteredPartidos());
+  } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
 }
 function formatFecha(f) { if (!f) return ''; const d = new Date(f); return isNaN(d) ? f : d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
 function formatHora(h) { if (!h) return ''; const m = String(h).match(/T(\d{2}:\d{2})/); return m ? m[1] : h; }
 function renderPartidos(partidos) {
   const grid = document.getElementById('partidosGrid');
   if (!partidos.length) { grid.innerHTML = `<div class="glass-card partido-card"><p class="placeholder-text">${t('loading')}</p></div>`; return; }
-  grid.innerHTML = partidos.map(p => `
+  grid.innerHTML = partidos.map(p => {
+    const pred = userPredictions[p.partido_id];
+    const predLine = pred ? `<div class="partido-prediction">${t('your_pred')}: ${pred.gol_local} - ${pred.gol_visitante}</div>` : '';
+    return `
     <div class="glass-card partido-card" onclick='openPredict(${JSON.stringify(p)})'>
       <div class="partido-header"><span class="partido-fase">${p.fase} ${p.grupo||''}</span><span class="partido-status ${p.status}">${p.status}</span></div>
       <div class="partido-teams"><div class="partido-team">${p.local}</div>${p.status==='finalizado'?`<div class="partido-score">${p.gol_local} - ${p.gol_visitante}</div>`:'<div class="partido-vs">vs</div>'}<div class="partido-team">${p.visitante}</div></div>
       <div class="partido-date">${formatFecha(p.fecha)} - ${formatHora(p.hora)}</div>
-    </div>`).join('');
+      ${predLine}
+    </div>`;
+  }).join('');
 }
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
