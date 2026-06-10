@@ -50,28 +50,10 @@ function doPost(e) {
 
 function getData(sheetName) {
   const sheet = getSheet(sheetName);
-  const rows = sheet.getDataRange().getValues();
+  const rows = sheet.getDataRange().getDisplayValues();
   if (rows.length < 2) return [];
   const headers = rows[0];
-  return rows.slice(1).map(r => {
-    const obj = {};
-    headers.forEach((h, i) => {
-      var v = r[i];
-      // fechas y horas: convertir a string pa que no se serialicen en UTC
-      if (v instanceof Date) {
-        if (h === 'hora') {
-          obj[h] = Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm');
-        } else if (h === 'fecha') {
-          obj[h] = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-        } else {
-          obj[h] = v.toISOString();
-        }
-      } else {
-        obj[h] = v;
-      }
-    });
-    return obj;
-  });
+  return rows.slice(1).map(r => { const obj = {}; headers.forEach((h, i) => obj[h] = r[i]); return obj; });
 }
 
 function checkAlias(alias) {
