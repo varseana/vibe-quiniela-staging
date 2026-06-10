@@ -294,6 +294,7 @@ document.getElementById('btnChampion').addEventListener('click', async () => {
 // partidos
 let allPartidos = [];
 let activeFilter = 'all';
+let activeSort = 'date';
 let userPredictions = {}; // { partido_id: { gol_local, gol_visitante } }
 
 async function loadUserPredictions() {
@@ -305,7 +306,11 @@ async function loadUserPredictions() {
   } catch { userPredictions = {}; }
 }
 
-function getFilteredPartidos() { return activeFilter === 'all' ? allPartidos : allPartidos.filter(p => p.status === activeFilter); }
+function getFilteredPartidos() {
+  let list = activeFilter === 'all' ? [...allPartidos] : allPartidos.filter(p => p.status === activeFilter);
+  if (activeSort === 'group') list.sort((a, b) => a.grupo.localeCompare(b.grupo) || a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
+  return list;
+}
 async function loadPartidos() {
   try {
     allPartidos = await apiGet('getPartidos');
@@ -334,6 +339,12 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active'); activeFilter = btn.dataset.filter; renderPartidos(getFilteredPartidos());
+  });
+});
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); activeSort = btn.dataset.sort; renderPartidos(getFilteredPartidos());
   });
 });
 
@@ -386,6 +397,11 @@ window.addEventListener('scroll', () => {
   const a=document.querySelector('.nav-link.active'); if(a)moveGlider(a);else glider.classList.remove('visible');
 });
 navLinks.forEach(l=>{l.addEventListener('mouseenter',()=>moveGlider(l));l.addEventListener('mouseleave',()=>{const a=document.querySelector('.nav-link.active');if(a)moveGlider(a);else glider.classList.remove('visible');});});
+
+// back to top
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => backToTop.classList.toggle('visible', window.scrollY > 500));
+backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 // init
 startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard();

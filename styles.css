@@ -127,6 +127,9 @@ body {
 .partidos-filters { display: flex; gap: var(--sp-3); justify-content: center; margin-bottom: var(--sp-7); }
 .filter-btn { background: var(--surface); border: 1px solid var(--glass-border); color: var(--text-secondary); padding: var(--sp-2) var(--sp-5); border-radius: 50px; font-size: 13px; cursor: pointer; transition: all var(--speed) var(--ease); }
 .filter-btn.active, .filter-btn:hover { background: rgba(155,48,255,0.15); border-color: var(--vibe-purple); color: var(--vibe-purple); }
+.filter-sep { width: 1px; height: 20px; background: var(--divider); margin: 0 var(--sp-2); }
+.sort-btn { background: var(--surface); border: 1px solid var(--glass-border); color: var(--text-secondary); padding: var(--sp-2) var(--sp-5); border-radius: 50px; font-size: 13px; cursor: pointer; transition: all var(--speed) var(--ease); }
+.sort-btn.active, .sort-btn:hover { background: rgba(200,80,192,0.15); border-color: var(--vibe-magenta); color: var(--vibe-magenta); }
 .partidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--sp-5); }
 .partido-card { padding: var(--sp-5); cursor: pointer; }
 .partido-card:hover { transform: translateY(-4px); }
@@ -253,3 +256,19 @@ body {
   .footer-inner { flex-direction: column; gap: var(--sp-3); text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+/* back to top */
+.back-to-top {
+  position: fixed; bottom: var(--sp-7); right: var(--sp-7); z-index: 99;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--vibe-purple), var(--vibe-magenta));
+  border: none; color: #fff; font-size: 20px; font-weight: 700;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+  box-shadow: 0 4px 20px rgba(155,48,255,0.4);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+.back-to-top.visible { opacity: 1; pointer-events: auto; }
+.back-to-top:hover { transform: translateY(-3px) scale(1.1); box-shadow: 0 8px 32px rgba(155,48,255,0.6); }
+.back-to-top:active { transform: scale(0.95); }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 4px 20px rgba(155,48,255,0.4); } 50% { box-shadow: 0 4px 28px rgba(155,48,255,0.7), 0 0 40px rgba(155,48,255,0.3); } }
