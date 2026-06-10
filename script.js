@@ -11,7 +11,7 @@ const T = {
     nav_home:'Home', nav_champion:'Champion', nav_matches:'Matches', nav_rules:'Rules', nav_register:'Register', nav_login:'Login',
     hero_title:'World Cup Predictions 2026', hero_sub:'Predict the results of the FIFA World Cup USA/Mexico/Canada. Compete with all of TSE. Win prizes.',
     days:'Days', hours:'Hours', hero_join:'Join the Pool', hero_rules:'View Rules',
-    champ_badge:'Bonus', champ_title:'Pick Your Champion', champ_desc:'Choose who you think will win the World Cup. Worth 10 bonus points. Locks when the tournament starts.',
+    champ_badge:'Bonus', champ_title:'Pick Your Champion', champ_desc:'Choose who you think will win the World Cup. Worth 10 bonus points. Locks on June 24.',
     champ_save:'Save Pick', champ_locked:'Predictions are locked. The tournament has started.',
     match_badge:'Matches', match_title:'Group Stage', filter_all:'All', filter_pending:'Pending', filter_done:'Finished', loading:'Loading...',
     lb_title:'Standings', lb_player:'Player', lb_exact:'Exact', lb_correct:'Correct', lb_champ:'Champ', lb_pts:'Points',
@@ -34,7 +34,7 @@ const T = {
     nav_home:'Inicio', nav_champion:'Campeon', nav_matches:'Partidos', nav_rules:'Reglas', nav_register:'Registrarse', nav_login:'Ingresar',
     hero_title:'Quiniela Mundial 2026', hero_sub:'Predice los resultados del Mundial USA/Mexico/Canada. Compite con todo TSE. Gana premios.',
     days:'Dias', hours:'Horas', hero_join:'Unirme a la Quiniela', hero_rules:'Ver Reglas',
-    champ_badge:'Bonus', champ_title:'Elige al Campeon', champ_desc:'Elige quien crees que ganara el Mundial. Vale 10 puntos bonus. Se bloquea al iniciar el torneo.',
+    champ_badge:'Bonus', champ_title:'Elige al Campeon', champ_desc:'Elige quien crees que ganara el Mundial. Vale 10 puntos bonus. Se bloquea el 24 de Junio.',
     champ_save:'Guardar', champ_locked:'Las predicciones estan bloqueadas. El torneo ya inicio.',
     match_badge:'Partidos', match_title:'Fase de Grupos', filter_all:'Todos', filter_pending:'Pendientes', filter_done:'Finalizados', loading:'Cargando...',
     lb_title:'Tabla de Posiciones', lb_player:'Jugador', lb_exact:'Exactos', lb_correct:'Aciertos', lb_champ:'Campeon', lb_pts:'Puntos',
@@ -314,7 +314,7 @@ async function loadPartidos() {
   } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
 }
 function formatFecha(f) { if (!f) return ''; const d = new Date(f); return isNaN(d) ? f : d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
-function formatHora(h) { if (!h) return ''; const m = String(h).match(/T(\d{2}:\d{2})/); return m ? m[1] : h; }
+function formatHora(h) { if (!h) return ''; const m = String(h).match(/(\d{2}:\d{2})/); return m ? m[1] + ' CST' : h; }
 function renderPartidos(partidos) {
   const grid = document.getElementById('partidosGrid');
   if (!partidos.length) { grid.innerHTML = `<div class="glass-card partido-card"><p class="placeholder-text">${t('loading')}</p></div>`; return; }
