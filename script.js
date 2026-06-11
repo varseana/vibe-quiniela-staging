@@ -320,17 +320,77 @@ async function loadPartidos() {
 }
 function formatFecha(f) { if (!f) return ''; const parts = f.match(/(\d{4})-(\d{2})-(\d{2})/); if (!parts) return f; const d = new Date(+parts[1], +parts[2]-1, +parts[3]); return d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
 function formatHora(h) { if (!h) return ''; const m = String(h).match(/(\d{2}:\d{2})/); return m ? m[1] + ' CST' : h; }
+function getMatchDeadline(p) {
+  // deadline = match time - 1 hour (CST, same as stored hours)
+  var parts = p.fecha.match(/(\d{4})-(\d{2})-(\d{2})/);
+  var hParts = (p.hora || '').match(/(\d{2}):(\d{2})/);
+  if (!parts || !hParts) return null;
+  return new Date(+parts[1], +parts[2]-1, +parts[3], +hParts[1]-1, +hParts[2]);
+}
+
+function getBettingStatus(p) {
+  if (p.status === 'finalizado') return { state: 'finished' };
+  var deadline = getMatchDeadline(p);
+  if (!deadline) return { state: 'open' };
+  var now = new Date();
+  var diff = deadline - now;
+  if (diff <= 0) return { state: 'closed' };
+  if (diff <= 12 * 3600000) {
+    var h = Math.floor(diff / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    return { state: 'closing', label: h > 0 ? h + 'h ' + m + 'm' : m + 'm' };
+  }
+  return { state: 'open' };
+}
+
+function calcPoints(pred, p) {
+  if (!pred || p.status !== 'finalizado' || p.gol_local === '' || p.gol_visitante === '') return null;
+  var rL = Number(p.gol_local), rV = Number(p.gol_visitante);
+  var pL = Number(pred.gol_local), pV = Number(pred.gol_visitante);
+  if (pL === rL && pV === rV) return { pts: 5, label: '+5 Exact!' };
+  var realW = rL > rV ? 'L' : rL < rV ? 'V' : 'E';
+  var predW = pL > pV ? 'L' : pL < pV ? 'V' : 'E';
+  if (predW === realW) return { pts: 2, label: '+2 Correct winner' };
+  return { pts: 0, label: 'No points' };
+}
+
 function renderPartidos(partidos) {
   const grid = document.getElementById('partidosGrid');
   if (!partidos.length) { grid.innerHTML = `<div class="glass-card partido-card"><p class="placeholder-text">${t('loading')}</p></div>`; return; }
   grid.innerHTML = partidos.map(p => {
     const pred = userPredictions[p.partido_id];
-    const predLine = pred ? `<div class="partido-prediction">${t('your_pred')}: ${pred.gol_local} - ${pred.gol_visitante}</div>` : '';
+    const bet = getBettingStatus(p);
+    const pts = calcPoints(pred, p);
+    const isClosed = bet.state === 'closed' || bet.state === 'finished';
+
+    // status badge
+    var statusBadge = '';
+    if (p.status === 'finalizado') statusBadge = '<span class="partido-status finalizado">Final</span>';
+    else statusBadge = '<span class="partido-status pendiente">Score Pending</span>';
+
+    // prediction + points line
+    var predLine = '';
+    if (pred) {
+      predLine = `<div class="partido-prediction">${t('your_pred')}: ${pred.gol_local} - ${pred.gol_visitante}`;
+      if (pts) predLine += ` <span class="pts-badge pts-badge--${pts.pts}">${pts.label}</span>`;
+      predLine += '</div>';
+    }
+
+    // betting status line
+    var betLine = '';
+    if (bet.state === 'open') betLine = '<div class="partido-bet partido-bet--open">Open</div>';
+    else if (bet.state === 'closing') betLine = `<div class="partido-bet partido-bet--closing">Closes in ${bet.label}</div>`;
+    else if (bet.state === 'closed') betLine = '<div class="partido-bet partido-bet--closed">Betting Closed</div>';
+
+    var cardClass = 'glass-card partido-card' + (isClosed ? ' partido-card--locked' : '');
+    var onclick = isClosed ? '' : `onclick='openPredict(${JSON.stringify(p)})'`;
+
     return `
-    <div class="glass-card partido-card" onclick='openPredict(${JSON.stringify(p)})'>
-      <div class="partido-header"><span class="partido-fase">${p.fase} ${p.grupo||''}</span><span class="partido-status ${p.status}">${p.status}</span></div>
+    <div class="${cardClass}" ${onclick}>
+      <div class="partido-header"><span class="partido-fase">${p.fase} ${p.grupo||''}</span>${statusBadge}</div>
       <div class="partido-teams"><div class="partido-team">${p.local}</div>${p.status==='finalizado'?`<div class="partido-score">${p.gol_local} - ${p.gol_visitante}</div>`:'<div class="partido-vs">vs</div>'}<div class="partido-team">${p.visitante}</div></div>
       <div class="partido-date">${formatFecha(p.fecha)} - ${formatHora(p.hora)}</div>
+      ${betLine}
       ${predLine}
     </div>`;
   }).join('');
@@ -402,6 +462,9 @@ navLinks.forEach(l=>{l.addEventListener('mouseenter',()=>moveGlider(l));l.addEve
 const backToTop = document.getElementById('backToTop');
 window.addEventListener('scroll', () => backToTop.classList.toggle('visible', window.scrollY > 500));
 backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// refresh betting status every 60s
+setInterval(() => { if (allPartidos.length) renderPartidos(getFilteredPartidos()); }, 60000);
 
 // init
 startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard();
