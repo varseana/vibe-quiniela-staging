@@ -413,7 +413,13 @@ async function loadLeaderboard() {
   try {
     const data = await apiGet('getLeaderboard'), body = document.getElementById('leaderboardBody');
     if (!data.length) { body.innerHTML = `<tr><td colspan="6" class="placeholder-text">--</td></tr>`; return; }
-    body.innerHTML = data.map((p, i) => `<tr class="${i<3?'rank-'+(i+1):''}"><td class="rank-num">${i+1}</td><td>${p.alias}</td><td>${p.exactos}</td><td>${p.aciertos}</td><td>${p.campeon||''}</td><td class="pts-num">${p.puntos}</td></tr>`).join('');
+    const u = getUser();
+    body.innerHTML = data.map((p, i) => {
+      const isMe = u && p.alias.toLowerCase() === u.alias.toLowerCase();
+      const cls = (i<3?'rank-'+(i+1):'') + (isMe?' current-user':'');
+      const name = isMe ? `<span class="user-alias">${p.alias}</span><span class="you-badge">You</span>` : p.alias;
+      return `<tr class="${cls}"><td class="rank-num">${i+1}</td><td>${name}</td><td>${p.exactos}</td><td>${p.aciertos}</td><td>${p.campeon||''}</td><td class="pts-num">${p.puntos}</td></tr>`;
+    }).join('');
   } catch { document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="6" class="placeholder-text">Error</td></tr>'; }
 }
 

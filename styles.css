@@ -167,6 +167,11 @@ body {
 .leaderboard-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding: var(--sp-4) var(--sp-5); text-align: left; border-bottom: 1px solid var(--divider); position: sticky; top: 0; background: var(--bg-secondary); z-index: 1; }
 .leaderboard-table td { padding: var(--sp-3) var(--sp-5); font-size: 14px; border-bottom: 1px solid var(--divider); }
 .leaderboard-table tr:hover td { background: var(--surface-hover); }
+.leaderboard-table tr.current-user td { background: rgba(155,48,255,0.15); border-top: 1px solid rgba(155,48,255,0.4); border-bottom: 1px solid rgba(155,48,255,0.4); }
+.leaderboard-table tr.current-user td:first-child { position: relative; }
+.leaderboard-table tr.current-user td:first-child::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--vibe-purple), var(--vibe-magenta)); border-radius: 0 2px 2px 0; }
+.leaderboard-table tr.current-user .user-alias { font-weight: 700; color: var(--vibe-purple); }
+.leaderboard-table tr.current-user .you-badge { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 50px; margin-left: 8px; background: rgba(155,48,255,0.2); color: var(--vibe-purple); }
 .leaderboard-table .rank-1 td { background: rgba(155,48,255,0.08); }
 .leaderboard-table .rank-2 td { background: rgba(200,80,192,0.06); }
 .leaderboard-table .rank-3 td { background: rgba(65,88,208,0.06); }
