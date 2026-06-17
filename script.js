@@ -29,6 +29,7 @@ const T = {
     pred_submit:'Submit Prediction',
     btn_logout:'Logout', btn_change_pw:'Change Password', your_pick:'Your pick:', no_pick:'No pick yet', saved:'Saved!', sending:'Sending...', registering:'Registering...', registered:'Registered!', conn_err:'Connection error', logging_in:'Logging in...', logged_in:'Welcome back!', your_pred:'Your prediction',
     chg_pw_title:'Change Password', chg_pw_current:'Current Password', chg_pw_new:'New Password', chg_pw_confirm:'Confirm New Password', chg_pw_submit:'Change', pw_changed:'Password changed!',
+    prizes_title:'Prizes', prize_1st:'1st Place', prize_2nd:'2nd Place', prize_3rd:'3rd Place', prize_raffle:'Raffle', prize_raffle_desc:'all participants',
   },
   es: {
     nav_home:'Inicio', nav_champion:'Campeon', nav_matches:'Partidos', nav_rules:'Reglas', nav_register:'Registrarse', nav_login:'Ingresar',
@@ -52,6 +53,7 @@ const T = {
     pred_submit:'Enviar Prediccion',
     btn_logout:'Salir', btn_change_pw:'Cambiar Contrasena', your_pick:'Tu eleccion:', no_pick:'Sin eleccion aun', saved:'Guardado!', sending:'Enviando...', registering:'Registrando...', registered:'Registrado!', conn_err:'Error de conexion', logging_in:'Ingresando...', logged_in:'Bienvenido!', your_pred:'Tu prediccion',
     chg_pw_title:'Cambiar Contrasena', chg_pw_current:'Contrasena Actual', chg_pw_new:'Nueva Contrasena', chg_pw_confirm:'Confirmar Nueva', chg_pw_submit:'Cambiar', pw_changed:'Contrasena cambiada!',
+    prizes_title:'Premios', prize_1st:'1er Lugar', prize_2nd:'2do Lugar', prize_3rd:'3er Lugar', prize_raffle:'Rifa', prize_raffle_desc:'todos los participantes',
   }
 };
 
