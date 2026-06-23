@@ -35,8 +35,7 @@
   --divider: rgba(255,255,255,0.06);
 }
 
-html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
-@media (max-width: 900px) { html { scroll-snap-type: none; } }
+html { scroll-behavior: smooth; }
 body { scroll-snap-type: none; }
 body {
   font-family: var(--font-body); background: var(--bg); color: var(--text-primary);
@@ -120,9 +119,8 @@ body {
 .countdown-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
 
 /* sections */
-.section { padding: var(--sp-10) 0; position: relative; z-index: 1; scroll-snap-align: start; }
-.section > * { scroll-snap-align: none; }
-#partidos { scroll-snap-align: none; }
+.section { padding: var(--sp-10) 0; position: relative; z-index: 1; }
+#partidos { }
 .section-alt { background: var(--bg-secondary); }
 .section-header { text-align: center; margin-bottom: var(--sp-9); }
 .section-badge { display: inline-block; padding: var(--sp-1) var(--sp-4); border-radius: 50px; background: var(--surface); border: 1px solid var(--glass-border); font-size: 12px; font-weight: 600; color: var(--vibe-purple); letter-spacing: 2px; text-transform: uppercase; margin-bottom: var(--sp-4); }
@@ -361,7 +359,7 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 @keyframes pulseGlow { 0%,100% { box-shadow: 0 4px 20px rgba(155,48,255,0.4); } 50% { box-shadow: 0 4px 28px rgba(155,48,255,0.7), 0 0 40px rgba(155,48,255,0.3); } }
 
 /* ⁘[ KNOCKOUT BRACKET SECTION ]⁘ */
-#knockout { padding-left: 0; padding-right: 0; scroll-snap-align: start; }
+#knockout { padding-left: 0; padding-right: 0; }
 .knockout-wrapper { position: relative; overflow: hidden; border-top: 1px solid rgba(155,48,255,0.2); }
 .knockout-wrapper::before {
   content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
