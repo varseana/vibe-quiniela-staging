@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIBE Quiniela - World Cup 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -22,16 +22,26 @@
       <a href="#reglas" class="nav-link" data-i18n="nav_rules">Rules</a>
       <a href="#champion" class="nav-link" data-i18n="nav_champion">Champion</a>
       <a href="#partidos" class="nav-link" data-i18n="nav_matches">Matches</a>
+      <a href="#knockout" class="nav-link">Knockout</a>
       <a href="#leaderboard" class="nav-link">Leaderboard</a>
       <div class="nav-glider" id="navGlider"></div>
     </div>
     <div class="nav-right">
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
       <button class="lang-toggle" id="langToggle">ES</button>
       <div class="nav-user" id="navUser">
         <button class="btn btn-glass btn-sm" onclick="openLogin()" data-i18n="nav_login">Login</button>
         <button class="btn btn-glow btn-sm" onclick="openRegister()" data-i18n="nav_register">Register</button>
       </div>
     </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#home" class="mobile-link" data-i18n="nav_home">Home</a>
+    <a href="#reglas" class="mobile-link" data-i18n="nav_rules">Rules</a>
+    <a href="#champion" class="mobile-link" data-i18n="nav_champion">Champion</a>
+    <a href="#partidos" class="mobile-link" data-i18n="nav_matches">Matches</a>
+    <a href="#knockout" class="mobile-link">Knockout</a>
+    <a href="#leaderboard" class="mobile-link">Leaderboard</a>
   </div>
 </nav>
 
@@ -123,6 +133,21 @@
     </div>
     <div class="partidos-grid" id="partidosGrid">
       <div class="glass-card partido-card placeholder-card"><p class="placeholder-text" data-i18n="loading">Loading...</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="knockout">
+  <div class="knockout-wrapper">
+    <div class="knockout-content">
+      <div class="bracket-scroll">
+        <div class="bracket" id="bracketGrid"></div>
+      </div>
+    </div>
+    <div class="knockout-overlay">
+      <div class="ko-overlay-text">COMING SOON</div>
+      <p class="ko-overlay-sub">Predictions open once group stage is complete.</p>
+      <p class="ko-rotate-hint"><svg class="rotate-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M12 18h.01"/></svg><span>Rotate your device or view on PC for the best experience.</span></p>
     </div>
   </div>
 </section>

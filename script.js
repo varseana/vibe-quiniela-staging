@@ -478,3 +478,51 @@ setInterval(() => { if (allPartidos.length) renderPartidos(getFilteredPartidos()
 
 // init
 startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard();
+
+// knockout bracket (coming soon — blurred behind overlay)
+(function() {
+  var grid = document.getElementById('bracketGrid');
+  if (!grid) return;
+  var rounds = [
+    { name: 'Round of 32', count: 8 },
+    { name: 'Round of 16', count: 4 },
+    { name: 'Quarter-Finals', count: 2 },
+    { name: 'Semi-Finals', count: 1 },
+    { name: 'Final', count: 1, isFinal: true },
+    { name: 'Semi-Finals', count: 1 },
+    { name: 'Quarter-Finals', count: 2 },
+    { name: 'Round of 16', count: 4 },
+    { name: 'Round of 32', count: 8 },
+  ];
+  rounds.forEach(function(r) {
+    var col = document.createElement('div');
+    col.className = 'ko-round' + (r.isFinal ? ' ko-final-col' : '');
+    col.innerHTML = '<div class="ko-round-header">' + r.name + '</div>';
+    var matches = document.createElement('div');
+    matches.className = 'ko-round-matches';
+    if (r.isFinal) {
+      matches.innerHTML = '<img src="trophy.png" class="ko-trophy-inner" alt="">';
+    }
+    for (var i = 0; i < r.count; i++) {
+      matches.innerHTML += '<div class="ko-matchup">TBD vs TBD</div>';
+    }
+    col.appendChild(matches);
+    grid.appendChild(col);
+  });
+})();
+
+// burger menu
+(function() {
+  var burger = document.getElementById('burger');
+  var menu = document.getElementById('mobileMenu');
+  burger.addEventListener('click', function() {
+    burger.classList.toggle('open');
+    menu.classList.toggle('open');
+  });
+  menu.querySelectorAll('.mobile-link').forEach(function(link) {
+    link.addEventListener('click', function() {
+      burger.classList.remove('open');
+      menu.classList.remove('open');
+    });
+  });
+})();
