@@ -430,4 +430,7 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 @media (max-width: 900px) {
   .nav-links { display: none !important; }
   .burger { display: flex; }
+  .nav-inner { position: relative; }
+  .nav-brand { position: absolute; left: 50%; transform: translateX(-50%); }
+  .nav-right { margin-left: auto; }
 }
