@@ -536,8 +536,10 @@ startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); upda
 (function() {
   var lastY = 0;
   var nav = document.getElementById('nav');
+  var burger = document.getElementById('burger');
   window.addEventListener('scroll', function() {
     if (window.innerWidth > 900) { nav.classList.remove('nav-hidden'); return; }
+    if (burger.classList.contains('open')) return;
     var y = window.scrollY;
     if (y > lastY && y > 60) nav.classList.add('nav-hidden');
     else nav.classList.remove('nav-hidden');
