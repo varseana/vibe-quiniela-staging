@@ -269,8 +269,8 @@ function populateTeams() {
 function updateChampionUI() {
   const locked = isLocked(), u = getUser();
   document.getElementById('championLocked').style.display = locked ? '' : 'none';
-  document.getElementById('championSelect').disabled = locked || !u;
-  document.getElementById('btnChampion').disabled = locked || !u;
+  document.getElementById('championInner').style.display = locked ? 'none' : '';
+  document.getElementById('champCountdown').style.display = locked ? 'none' : '';
   if (!u) { document.getElementById('championCurrent').textContent = ''; return; }
   loadChampion();
 }

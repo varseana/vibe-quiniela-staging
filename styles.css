@@ -376,7 +376,7 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 .bracket-scroll::-webkit-scrollbar-thumb { background: rgba(155,48,255,0.3); border-radius: 3px; }
 .bracket { display: flex; align-items: stretch; justify-content: center; gap: 0; min-width: max-content; }
 .ko-round { display: flex; flex-direction: column; min-width: 155px; }
-.ko-round-header { text-align: center; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); padding: 6px; margin: 0 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.ko-round-header { text-align: center; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); padding: 6px; margin: 0 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); font-family: var(--font-display); }
 .ko-round-matches { display: flex; flex-direction: column; justify-content: space-around; flex: 1; gap: 6px; padding: 0 4px; }
 
 /* matchup card */
@@ -390,7 +390,7 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 .ko-matchup.predicted:hover { border-color: rgba(34,197,94,0.55); box-shadow: 0 4px 16px rgba(34,197,94,0.15); }
 .ko-matchup.locked { opacity: 0.4; pointer-events: none; cursor: default; }
 .ko-matchup__teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 4px; width: 100%; }
-.ko-matchup__team { font-size: 10px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ko-matchup__team { font-size: 10px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-display); }
 .ko-matchup__team:first-child { text-align: right; }
 .ko-matchup__team:last-child { text-align: left; }
 .ko-matchup__vs { font-size: 9px; color: var(--text-muted); font-weight: 600; text-align: center; }
