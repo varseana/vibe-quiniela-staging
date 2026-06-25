@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIBE Quiniela - World Cup 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800;900&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -25,6 +25,7 @@ a{color:inherit;text-decoration:none}
 .blob{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;opacity:.1}
 .blob-1{width:500px;height:500px;background:var(--purple);top:-100px;right:-100px}
 .blob-2{width:400px;height:400px;background:var(--magenta);bottom:20%;left:-80px}
+.blob-3{width:300px;height:300px;background:var(--pink);top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06}
 
 /* nav */
 .nav{position:sticky;top:0;z-index:100;background:rgba(10,10,24,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
@@ -64,11 +65,34 @@ a{color:inherit;text-decoration:none}
 .prizes{margin-top:8px}
 .prizes-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px}
 .prizes-grid{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.prize-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px 20px;text-align:center;min-width:100px}
-.prize-icon{font-size:22px;display:block;margin-bottom:6px}
-.prize-rank{font-size:10px;color:var(--muted);font-weight:600;margin-bottom:4px}
-.prize-amount{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:800;color:var(--purple)}
-.prize-currency{font-size:9px;color:var(--muted)}
+.prize-card{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:24px 16px;text-align:center;min-width:110px;position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
+.prize-card:hover{transform:translateY(-4px)}
+.prize-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+.prize-card--1st{border-color:rgba(255,215,0,0.3);animation:goldPulse 3s ease-in-out infinite}
+.prize-card--1st:hover{box-shadow:0 8px 40px rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.5)}
+.prize-card--1st::before{background:linear-gradient(90deg,#ffd700,#ffed4a,#ffd700)}
+.prize-card--1st .prize-icon{background:linear-gradient(135deg,#ffd700,#ffed4a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.prize-card--1st .prize-amount{color:#ffd700}
+.prize-card--2nd{border-color:rgba(192,192,220,0.3)}
+.prize-card--2nd:hover{box-shadow:0 8px 40px rgba(192,192,220,0.12);border-color:rgba(192,192,220,0.5)}
+.prize-card--2nd::before{background:linear-gradient(90deg,#c0c0dc,#e8e8f0,#c0c0dc)}
+.prize-card--2nd .prize-icon{background:linear-gradient(135deg,#c0c0dc,#e8e8f0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.prize-card--2nd .prize-amount{color:#c0c0dc}
+.prize-card--3rd{border-color:rgba(205,127,50,0.3)}
+.prize-card--3rd:hover{box-shadow:0 8px 40px rgba(205,127,50,0.12);border-color:rgba(205,127,50,0.5)}
+.prize-card--3rd::before{background:linear-gradient(90deg,#cd7f32,#daa06d,#cd7f32)}
+.prize-card--3rd .prize-icon{background:linear-gradient(135deg,#cd7f32,#daa06d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.prize-card--3rd .prize-amount{color:#cd7f32}
+.prize-card--raffle{border-color:rgba(155,48,255,0.3)}
+.prize-card--raffle:hover{box-shadow:0 8px 40px rgba(155,48,255,0.15);border-color:rgba(155,48,255,0.5)}
+.prize-card--raffle::before{background:linear-gradient(90deg,var(--purple),var(--magenta),var(--purple))}
+.prize-card--raffle .prize-icon{background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.prize-card--raffle .prize-amount{color:var(--purple)}
+.prize-icon{font-size:32px;margin-bottom:8px;display:block}
+.prize-rank{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px}
+.prize-amount{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.prize-currency{font-size:11px;color:var(--muted);font-weight:500}
+@keyframes goldPulse{0%,100%{box-shadow:0 4px 20px rgba(255,215,0,0.08)}50%{box-shadow:0 4px 28px rgba(255,215,0,0.2),0 0 40px rgba(255,215,0,0.08)}}
 
 /* rules */
 .reglas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
@@ -184,6 +208,7 @@ a{color:inherit;text-decoration:none}
 <div class="particles" id="particles"></div>
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -220,10 +245,10 @@ a{color:inherit;text-decoration:none}
     <div class="prizes">
       <div class="prizes-title">Prizes</div>
       <div class="prizes-grid">
-        <div class="prize-card"><span class="prize-icon">🥇</span><div class="prize-rank">1st Place</div><div class="prize-amount">₡50,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card"><span class="prize-icon">🥈</span><div class="prize-rank">2nd Place</div><div class="prize-amount">₡35,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card"><span class="prize-icon">🥉</span><div class="prize-rank">3rd Place</div><div class="prize-amount">₡25,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card"><span class="prize-icon">🎲</span><div class="prize-rank">Raffle</div><div class="prize-amount">₡20,000</div><div class="prize-currency">all participants</div></div>
+        <div class="prize-card prize-card--1st"><span class="prize-icon">&#127942;</span><div class="prize-rank">1st Place</div><div class="prize-amount">&#8353;50,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--2nd"><span class="prize-icon">&#129352;</span><div class="prize-rank">2nd Place</div><div class="prize-amount">&#8353;35,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--3rd"><span class="prize-icon">&#129353;</span><div class="prize-rank">3rd Place</div><div class="prize-amount">&#8353;25,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--raffle"><span class="prize-icon">&#127922;</span><div class="prize-rank">Raffle</div><div class="prize-amount">&#8353;20,000</div><div class="prize-currency">all participants</div></div>
       </div>
     </div>
   </div>
