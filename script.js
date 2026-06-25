@@ -511,7 +511,7 @@ var KO_ROUND_ORDER = [
 var koPredictions = {};
 
 async function loadKnockout() {
-  // render con placeholders inmediatamente ~ no esperar el api
+  // render con placeholders inmediatamente
   renderKnockout([]);
 
   var u = getUser();
@@ -530,8 +530,8 @@ async function loadKnockout() {
     } catch(e) { console.warn('ko: getPredicciones failed', e); }
   }
 
-  // re-render with real data if we got any
-  renderKnockout(partidos);
+  // solo re-renderizar si hay datos reales de knockout
+  if (partidos.length > 0) renderKnockout(partidos);
 }
 
 function renderKnockout(partidos) {
