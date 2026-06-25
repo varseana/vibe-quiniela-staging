@@ -132,6 +132,53 @@
     </div>
   </div>
 </section>
+<script>
+// inline bracket render ~ no depende de script.js para mostrar los cuadros
+(function() {
+  var ROUNDS = [
+    { id:'r32l', label:'Round of 32', slots:8 },
+    { id:'r16l', label:'Round of 16', slots:4 },
+    { id:'qfl',  label:'Quarter-Finals', slots:2 },
+    { id:'semil',label:'Semi-Finals', slots:1 },
+    { id:'finalm',label:'Final', slots:0, isFinal:true },
+    { id:'semir',label:'Semi-Finals', slots:1 },
+    { id:'qfr',  label:'Quarter-Finals', slots:2 },
+    { id:'r16r', label:'Round of 16', slots:4 },
+    { id:'r32r', label:'Round of 32', slots:8 }
+  ];
+  var grid = document.getElementById('bracketGrid');
+  if (!grid) return;
+  ROUNDS.forEach(function(r) {
+    var col = document.createElement('div');
+    col.className = 'ko-round' + (r.isFinal ? ' ko-final-col' : '');
+    var hdr = document.createElement('div');
+    hdr.className = 'ko-round-header'; hdr.textContent = r.label;
+    col.appendChild(hdr);
+    if (r.isFinal) {
+      var img = document.createElement('img');
+      img.src = 'trophy.png'; img.className = 'ko-trophy-inner'; img.alt = 'Trophy';
+      col.appendChild(img);
+      var lbl = document.createElement('div');
+      lbl.className = 'ko-final-label'; lbl.textContent = 'WORLD CHAMPIONS';
+      col.appendChild(lbl);
+    } else {
+      var matches = document.createElement('div');
+      matches.className = 'ko-round-matches';
+      for (var i = 0; i < r.slots; i++) {
+        var card = document.createElement('div');
+        card.className = 'ko-matchup locked';
+        card.id = 'ko-' + r.id + '-' + i;
+        card.innerHTML = '<div class="ko-matchup__teams"><div class="ko-matchup__team">TBD</div><span class="ko-matchup__vs">vs</span><div class="ko-matchup__team">TBD</div></div><div class="ko-matchup__info"></div><div class="ko-matchup__status coming">COMING SOON</div>';
+        matches.appendChild(card);
+      }
+      col.appendChild(matches);
+    }
+    grid.appendChild(col);
+  });
+  // expose so script.js can update cards with real data
+  window._koBracketReady = true;
+})();
+</script>
 
 <section class="section" id="leaderboard">
   <div class="container">
