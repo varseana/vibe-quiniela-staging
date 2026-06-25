@@ -144,18 +144,6 @@ function openSetPassword() { document.getElementById('setPasswordOverlay').class
 function closeSetPassword() { document.getElementById('setPasswordOverlay').classList.remove('open'); }
 function openChangePassword() { document.getElementById('changePasswordOverlay').classList.add('open'); }
 function closeChangePassword() { document.getElementById('changePasswordOverlay').classList.remove('open'); }
-function openPredict(p) {
-  if (!getUser()) { openLogin(); return; }
-  document.getElementById('predPartidoId').value = p.partido_id;
-  document.getElementById('predLocal').textContent = p.local;
-  document.getElementById('predVisitante').textContent = p.visitante;
-  document.getElementById('predictTitle').textContent = `${p.local} vs ${p.visitante}`;
-  const existing = userPredictions[p.partido_id];
-  document.getElementById('predGolLocal').value = existing ? existing.gol_local : '';
-  document.getElementById('predGolVisitante').value = existing ? existing.gol_visitante : '';
-  document.getElementById('predictMsg').textContent = '';
-  document.getElementById('predictOverlay').classList.add('open');
-}
 function closePredict() { document.getElementById('predictOverlay').classList.remove('open'); }
 
 // register
