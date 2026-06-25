@@ -484,36 +484,172 @@ setInterval(() => { if (allPartidos.length) renderPartidos(getFilteredPartidos()
 // init
 startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard();
 
-// knockout bracket (coming soon — blurred behind overlay)
+// knockout bracket (interactive)
 (function() {
   var grid = document.getElementById('bracketGrid');
   if (!grid) return;
-  var rounds = [
-    { name: 'Round of 32', count: 8 },
-    { name: 'Round of 16', count: 4 },
-    { name: 'Quarter-Finals', count: 2 },
-    { name: 'Semi-Finals', count: 1 },
-    { name: 'Final', count: 1, isFinal: true },
-    { name: 'Semi-Finals', count: 1 },
-    { name: 'Quarter-Finals', count: 2 },
-    { name: 'Round of 16', count: 4 },
-    { name: 'Round of 32', count: 8 },
-  ];
-  rounds.forEach(function(r) {
-    var col = document.createElement('div');
-    col.className = 'ko-round' + (r.isFinal ? ' ko-final-col' : '');
-    col.innerHTML = '<div class="ko-round-header">' + r.name + '</div>';
-    var matches = document.createElement('div');
-    matches.className = 'ko-round-matches';
-    if (r.isFinal) {
-      matches.innerHTML = '<img src="trophy.png" class="ko-trophy-inner" alt="">';
-    }
-    for (var i = 0; i < r.count; i++) {
-      matches.innerHTML += '<div class="ko-matchup">TBD vs TBD</div>';
-    }
-    col.appendChild(matches);
-    grid.appendChild(col);
-  });
+
+  // real bracket data ~ match IDs from FIFA 2026 bracket structure
+  var KO_MATCHES = {
+    r32l: [
+      {id:'R32L-1',a:'1E',b:'3ABCDF',info:'Jun 28 · Boston'},
+      {id:'R32L-2',a:'1I',b:'3CDFGH',info:'Jun 29 · New York'},
+      {id:'R32L-3',a:'2A',b:'2B',info:'Jun 28 · Los Angeles'},
+      {id:'R32L-4',a:'1F',b:'2C',info:'Jun 29 · Monterrey'},
+      {id:'R32L-5',a:'2L',b:'1H',info:'Jul 1 · Toronto'},
+      {id:'R32L-6',a:'2J',b:'1D',info:'Jul 1 · Los Angeles'},
+      {id:'R32L-7',a:'3BEFIJ',b:'1G',info:'Jul 2 · San Francisco'},
+      {id:'R32L-8',a:'3AEHIJ',b:'1K',info:'Jul 1 · Seattle'}
+    ],
+    r16l: [
+      {id:'R16L-1',a:'W R32L-1',b:'W R32L-2',info:'Jul 4 · Philadelphia'},
+      {id:'R16L-2',a:'W R32L-3',b:'W R32L-4',info:'Jul 4 · Houston'},
+      {id:'R16L-3',a:'W R32L-5',b:'W R32L-6',info:'Jul 6 · Dallas'},
+      {id:'R16L-4',a:'W R32L-7',b:'W R32L-8',info:'Jul 6 · Seattle'}
+    ],
+    qfl: [
+      {id:'QFL-1',a:'W R16L-1',b:'W R16L-2',info:'Jul 9 · Boston'},
+      {id:'QFL-2',a:'W R16L-3',b:'W R16L-4',info:'Jul 10 · Los Angeles'}
+    ],
+    semil: [{id:'SFL-1',a:'W QFL-1',b:'W QFL-2',info:'Jul 14 · Dallas'}],
+    finalm: [{id:'FINAL',a:'W SFL-1',b:'W SFR-1',info:'Jul 19 · MetLife, NJ'}],
+    semir: [{id:'SFR-1',a:'W QFR-1',b:'W QFR-2',info:'Jul 15 · Atlanta'}],
+    qfr: [
+      {id:'QFR-1',a:'W R16R-1',b:'W R16R-2',info:'Jul 11 · Miami'},
+      {id:'QFR-2',a:'W R16R-3',b:'W R16R-4',info:'Jul 12 · Kansas City'}
+    ],
+    r16r: [
+      {id:'R16R-1',a:'W R32R-1',b:'W R32R-2',info:'Jul 5 · New York'},
+      {id:'R16R-2',a:'W R32R-3',b:'W R32R-4',info:'Jul 5 · Mexico City'},
+      {id:'R16R-3',a:'W R32R-5',b:'W R32R-6',info:'Jul 7 · Vancouver'},
+      {id:'R16R-4',a:'W R32R-7',b:'W R32R-8',info:'Jul 7 · Atlanta'}
+    ],
+    r32r: [
+      {id:'R32R-1',a:'1C',b:'2F',info:'Jun 29 · Houston'},
+      {id:'R32R-2',a:'2E',b:'2I',info:'Jun 30 · Dallas'},
+      {id:'R32R-3',a:'1A',b:'3CEFHI',info:'Jun 30 · Mexico City'},
+      {id:'R32R-4',a:'1L',b:'3EHIJK',info:'Jul 1 · Atlanta'},
+      {id:'R32R-5',a:'1J',b:'2H',info:'Jul 3 · Miami'},
+      {id:'R32R-6',a:'2G',b:'2D',info:'Jul 3 · Dallas'},
+      {id:'R32R-7',a:'1B',b:'3EFGIJ',info:'Jul 2 · Vancouver'},
+      {id:'R32R-8',a:'1K',b:'3DEIJL',info:'Jul 3 · Kansas City'}
+    ]
+  };
+
+  // round unlock logic ~ each round unlocks when the previous one has all results
+  // for now: R32 is open, rest locked until we implement progressive unlock from API
+  var ROUND_STATUS = { r32l:'open', r16l:'locked', qfl:'locked', semil:'locked', finalm:'locked', semir:'locked', qfr:'locked', r16r:'locked', r32r:'open' };
+
+  var ROUND_LABELS = { r32l:'Round of 32', r16l:'Round of 16', qfl:'Quarter-Finals', semil:'Semi-Finals', finalm:'Final', semir:'Semi-Finals', qfr:'Quarter-Finals', r16r:'Round of 16', r32r:'Round of 32' };
+  var ROUND_ORDER = ['r32l','r16l','qfl','semil','finalm','semir','qfr','r16r','r32r'];
+
+  var koPredictions = {}; // { matchId: { gol_a, gol_b } }
+
+  // load predictions from localStorage (temp until API)
+  try { koPredictions = JSON.parse(localStorage.getItem('vibe_ko_preds') || '{}'); } catch(e) { koPredictions = {}; }
+
+  function saveKoPreds() { localStorage.setItem('vibe_ko_preds', JSON.stringify(koPredictions)); }
+
+  function renderBracket() {
+    grid.innerHTML = '';
+    ROUND_ORDER.forEach(function(key) {
+      var col = document.createElement('div');
+      var isFinal = key === 'finalm';
+      col.className = 'ko-round' + (isFinal ? ' ko-final-col' : '');
+
+      var header = document.createElement('div');
+      header.className = 'ko-round-header';
+      header.textContent = ROUND_LABELS[key];
+      col.appendChild(header);
+
+      if (isFinal) {
+        var trophy = document.createElement('img');
+        trophy.src = 'trophy.png'; trophy.alt = 'World Cup Trophy'; trophy.className = 'ko-trophy-inner';
+        col.appendChild(trophy);
+        var label = document.createElement('div');
+        label.className = 'ko-final-label'; label.textContent = 'WORLD CHAMPIONS';
+        col.appendChild(label);
+      }
+
+      var matches = document.createElement('div');
+      matches.className = 'ko-round-matches';
+
+      KO_MATCHES[key].forEach(function(m) {
+        var isLocked = ROUND_STATUS[key] === 'locked';
+        var pred = koPredictions[m.id];
+        var card = document.createElement('div');
+        card.className = 'ko-matchup' + (isLocked ? ' ko-matchup--locked' : '') + (pred ? ' ko-matchup--predicted' : '');
+
+        var teams = document.createElement('div');
+        teams.className = 'ko-matchup__teams';
+        teams.innerHTML = '<div class="ko-matchup__team">' + esc(m.a) + '</div><span class="ko-matchup__vs">vs</span><div class="ko-matchup__team">' + esc(m.b) + '</div>';
+        card.appendChild(teams);
+
+        var info = document.createElement('div');
+        info.className = 'ko-matchup__info'; info.textContent = m.info;
+        card.appendChild(info);
+
+        if (pred) {
+          var predEl = document.createElement('div');
+          predEl.className = 'ko-matchup__pred';
+          predEl.textContent = pred.gol_a + ' - ' + pred.gol_b;
+          card.appendChild(predEl);
+        }
+
+        var status = document.createElement('div');
+        if (isLocked) { status.className = 'ko-matchup__status ko-matchup__status--locked'; status.textContent = 'LOCKED'; }
+        else { status.className = 'ko-matchup__status ko-matchup__status--open'; status.textContent = pred ? 'PREDICTED' : 'OPEN'; }
+        card.appendChild(status);
+
+        if (!isLocked) {
+          card.addEventListener('click', function() { openKoPredictModal(m); });
+        }
+
+        matches.appendChild(card);
+      });
+
+      col.appendChild(matches);
+      grid.appendChild(col);
+    });
+  }
+
+  // predict modal (reuses the existing predict overlay)
+  function openKoPredictModal(m) {
+    if (!getUser()) { openLogin(); return; }
+    document.getElementById('predPartidoId').value = m.id;
+    document.getElementById('predLocal').textContent = m.a;
+    document.getElementById('predVisitante').textContent = m.b;
+    document.getElementById('predictTitle').textContent = m.a + ' vs ' + m.b;
+    var existing = koPredictions[m.id];
+    document.getElementById('predGolLocal').value = existing ? existing.gol_a : '';
+    document.getElementById('predGolVisitante').value = existing ? existing.gol_b : '';
+    document.getElementById('predictMsg').textContent = '';
+    document.getElementById('predictOverlay').classList.add('open');
+
+    // override submit for knockout
+    var form = document.getElementById('predictForm');
+    var handler = function(e) {
+      e.preventDefault();
+      var golA = Number(document.getElementById('predGolLocal').value);
+      var golB = Number(document.getElementById('predGolVisitante').value);
+      var msg = document.getElementById('predictMsg');
+      if (document.getElementById('predGolLocal').value === '' || document.getElementById('predGolVisitante').value === '') { msg.textContent = 'Enter both scores'; msg.className = 'form-msg error'; return; }
+      koPredictions[m.id] = { gol_a: golA, gol_b: golB };
+      saveKoPreds();
+      msg.textContent = t('saved'); msg.className = 'form-msg success';
+      setTimeout(function() { closePredict(); renderBracket(); }, 600);
+      form.removeEventListener('submit', handler);
+    };
+    // remove old listeners by cloning
+    var newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+    newForm.addEventListener('submit', handler);
+    // rebind close
+    document.getElementById('predictClose').addEventListener('click', closePredict);
+    document.getElementById('predictOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) closePredict(); });
+  }
+
+  renderBracket();
 })();
 
 // burger menu
