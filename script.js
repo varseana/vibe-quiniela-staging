@@ -121,7 +121,7 @@ function startChampionCountdown() {
   if (!el) return;
   function tick() {
     const diff = Math.max(0, LOCK_DATE - new Date());
-    if (diff === 0) { el.innerHTML = '<span class="champ-cd-label">Champion picks are locked!</span>'; return; }
+    if (diff === 0) { el.innerHTML = ''; return; } // locked message handled by championLocked el
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
@@ -279,8 +279,14 @@ async function loadChampion() {
   try {
     const res = await apiGet('getChampion', { pid: u.id });
     const cur = document.getElementById('championCurrent');
-    if (res.equipo) { cur.innerHTML = `${t('your_pick')} <strong>${res.equipo}</strong>`; document.getElementById('championSelect').value = res.equipo; }
-    else cur.textContent = t('no_pick');
+    if (res.equipo) {
+      cur.innerHTML = isLocked()
+        ? `<span class="champ-pick-locked">&#127942; You picked: <strong>${res.equipo}</strong></span>`
+        : `${t('your_pick')} <strong>${res.equipo}</strong>`;
+      document.getElementById('championSelect').value = res.equipo;
+    } else {
+      cur.textContent = isLocked() ? '' : t('no_pick');
+    }
   } catch {}
 }
 document.getElementById('btnChampion').addEventListener('click', async () => {
@@ -556,14 +562,12 @@ function renderKnockout(partidos) {
     var matchContainer = document.createElement('div');
     matchContainer.className = 'ko-round-matches';
 
-    // get matches for this round + side
+    // get matches for this round + side, always show at least the expected slot count
     var roundMatches = partidos.filter(function(p) {
       return p.fase === round.fase && sideOf(p) === round.side;
     });
-
-    // if no matches from DB yet, show placeholder slots
-    var slots = roundMatches.length || round.slots;
-    for (var i = 0; i < slots; i++) {
+    var count = Math.max(roundMatches.length, round.slots);
+    for (var i = 0; i < count; i++) {
       var p = roundMatches[i] || null;
       var card = buildKoCard(p);
       matchContainer.appendChild(card);
