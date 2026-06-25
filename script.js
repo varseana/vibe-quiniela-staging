@@ -244,24 +244,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
 });
 
 // predict
-document.getElementById('predictForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const u = getUser(); if (!u) { openLogin(); return; }
-  const msg = document.getElementById('predictMsg');
-  const partidoId = document.getElementById('predPartidoId').value;
-  const golL = Number(document.getElementById('predGolLocal').value);
-  const golV = Number(document.getElementById('predGolVisitante').value);
-  msg.textContent = t('sending'); msg.className = 'form-msg';
-  try {
-    const res = await apiPost({ action:'predict', pid:u.id, partido_id:partidoId, gol_local:golL, gol_visitante:golV });
-    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
-    userPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
-    renderPartidos(getFilteredPartidos());
-    msg.textContent = t('saved'); msg.className = 'form-msg success';
-    setTimeout(closePredict, 1000);
-  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
-});
-
+// predict form ~ handled by knockout submit listener below
 // champion
 function isLocked() { return new Date() >= LOCK_DATE; }
 function populateTeams() {
@@ -672,7 +655,7 @@ document.getElementById('predictForm').addEventListener('submit', async (e) => {
     if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
     koPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
     msg.textContent = t('saved'); msg.className = 'form-msg success';
-    setTimeout(closePredict, 1000);
+    setTimeout(() => { closePredict(); loadKnockout(); }, 800);
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
