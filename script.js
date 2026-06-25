@@ -507,22 +507,26 @@ var KO_ROUND_ORDER = [
 var koPredictions = {};
 
 async function loadKnockout() {
+  // render con placeholders inmediatamente ~ no esperar el api
+  renderKnockout([]);
+
   var u = getUser();
   var partidos = [];
   try {
     var all = await apiGet('getPartidos');
     var koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
     partidos = all.filter(function(p) { return koFases.indexOf(p.fase) !== -1; });
-  } catch(e) {}
+  } catch(e) { console.warn('ko: getPartidos failed', e); }
 
   if (u) {
     try {
       var preds = await apiGet('getPredicciones', { pid: u.id });
       koPredictions = {};
       preds.forEach(function(p) { koPredictions[p.partido_id] = { gol_local: Number(p.gol_local), gol_visitante: Number(p.gol_visitante) }; });
-    } catch(e) {}
+    } catch(e) { console.warn('ko: getPredicciones failed', e); }
   }
 
+  // re-render with real data if we got any
   renderKnockout(partidos);
 }
 
