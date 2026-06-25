@@ -570,14 +570,12 @@ function renderKnockout(partidos) {
 }
 
 function buildKoCard(p) {
-  var card = document.createElement('div');
   var hasTeams = p && p.local && p.visitante;
-  var isOpen = p && p.status === 'pendiente' && hasTeams;
   var isFinished = p && p.status === 'finalizado';
   var pred = p && koPredictions[p.partido_id];
   var pts = null;
 
-  // calcular puntos si el partido termino y hay prediccion
+  // calcular puntos
   if (isFinished && pred && p.gol_local !== '' && p.gol_visitante !== '') {
     var rL = Number(p.gol_local), rV = Number(p.gol_visitante);
     var pL = Number(pred.gol_local), pV = Number(pred.gol_visitante);
@@ -589,63 +587,68 @@ function buildKoCard(p) {
     }
   }
 
-  card.className = 'ko-matchup' + (isOpen ? '' : ' locked') + (pred ? ' predicted' : '') + (pts && pts.n > 0 ? ' scored' : '');
-
-  var teamA = (p && p.local) || 'TBD';
-  var teamB = (p && p.visitante) || 'TBD';
-
-  // calcular deadline y betting status
-  var bettingStatus = 'open';
-  var closingLabel = '';
-  if (p && hasTeams && p.status === 'pendiente') {
+  // deadline / betting status
+  var bettingState = 'locked', closingLabel = '';
+  if (hasTeams && !isFinished) {
     var deadline = getMatchDeadline(p);
-    if (deadline) {
+    if (!deadline) { bettingState = 'open'; }
+    else {
       var diff = deadline - new Date();
-      if (diff <= 0) { bettingStatus = 'closed'; isOpen = false; card.classList.add('locked'); card.classList.remove('predicted'); }
+      if (diff <= 0) bettingState = 'closed';
       else if (diff <= 12 * 3600000) {
-        bettingStatus = 'closing';
+        bettingState = 'closing';
         var ch = Math.floor(diff / 3600000), cm = Math.floor((diff % 3600000) / 60000);
         closingLabel = ch > 0 ? ch + 'h ' + cm + 'm' : cm + 'm';
-      }
+      } else { bettingState = 'open'; }
     }
   }
 
-  var info = '';
-  if (p) info = (p.fecha ? String(p.fecha).slice(0,10) : '') + (p.hora ? ' · ' + String(p.hora).slice(0,5) + ' CST' : '');
+  var isClickable = bettingState === 'open' || bettingState === 'closing';
+  var isClosed = isFinished || bettingState === 'closed' || bettingState === 'locked';
 
-  // score real del partido (si terminó)
-  var realScore = '';
-  if (isFinished && p.gol_local !== '' && p.gol_visitante !== '') {
-    realScore = '<div class="ko-matchup__score">' + p.gol_local + ' - ' + p.gol_visitante + '</div>';
-  }
+  var card = document.createElement('div');
+  card.className = 'glass-card partido-card' + (isClosed ? ' partido-card--locked' : '');
 
-  // prediccion del usuario
-  var predBlock = '';
+  // header: fase + status badge
+  var statusBadge = '';
+  if (isFinished) statusBadge = '<span class="partido-status finalizado">Final</span>';
+  else if (hasTeams) statusBadge = '<span class="partido-status pendiente">Score Pending</span>';
+
+  // teams row
+  var fase = p ? esc(p.fase || '') : 'Round of 32';
+  var teamA = hasTeams ? esc(p.local) : 'TBD';
+  var teamB = hasTeams ? esc(p.visitante) : 'TBD';
+  var teamsRow = '<div class="partido-teams">' +
+    '<div class="partido-team">' + teamA + '</div>' +
+    (isFinished ? '<div class="partido-score">' + p.gol_local + ' - ' + p.gol_visitante + '</div>' : '<div class="partido-vs">vs</div>') +
+    '<div class="partido-team">' + teamB + '</div>' +
+    '</div>';
+
+  // date row
+  var dateStr = p ? formatFecha(p.fecha) + ' - ' + formatHora(p.hora) : '';
+
+  // betting status line
+  var betLine = '';
+  if (bettingState === 'open') betLine = '<div class="partido-bet partido-bet--open">Open</div>';
+  else if (bettingState === 'closing') betLine = '<div class="partido-bet partido-bet--closing">Closes in ' + closingLabel + '</div>';
+  else if (bettingState === 'closed') betLine = '<div class="partido-bet partido-bet--closed">Betting Closed</div>';
+
+  // prediction line
+  var predLine = '';
   if (pred) {
-    predBlock = '<div class="ko-matchup__pred">&#128100; ' + pred.gol_local + '-' + pred.gol_visitante;
-    if (pts) predBlock += ' <span class="ko-pts ko-pts--' + pts.n + '">' + pts.label + '</span>';
-    predBlock += '</div>';
+    predLine = '<div class="partido-prediction">Your prediction: ' + pred.gol_local + ' - ' + pred.gol_visitante;
+    if (pts) predLine += ' <span class="pts-badge pts-badge--' + pts.n + '">' + pts.label + '</span>';
+    predLine += '</div>';
   }
-
-  var statusText, statusClass;
-  if (isFinished) { statusText = 'FINAL'; statusClass = 'final'; }
-  else if (bettingStatus === 'closed') { statusText = 'CLOSED'; statusClass = 'coming'; }
-  else if (bettingStatus === 'closing') { statusText = 'Closes in ' + closingLabel; statusClass = 'closing'; }
-  else if (isOpen) { statusText = pred ? 'PREDICTED' : 'OPEN'; statusClass = 'open'; }
-  else { statusText = 'COMING SOON'; statusClass = 'coming'; }
 
   card.innerHTML =
-    '<div class="ko-matchup__teams">' +
-      '<div class="ko-matchup__team">' + esc(teamA) + '</div>' +
-      '<span class="ko-matchup__vs">vs</span>' +
-      '<div class="ko-matchup__team">' + esc(teamB) + '</div>' +
-    '</div>' +
-    (info ? '<div class="ko-matchup__info">' + esc(info) + '</div>' : '') +
-    realScore +
-    predBlock +
-    '<div class="ko-matchup__status ' + statusClass + '">' + statusText + '</div>';
+    '<div class="partido-header"><span class="partido-fase">' + fase + '</span>' + statusBadge + '</div>' +
+    teamsRow +
+    (dateStr ? '<div class="partido-date">' + dateStr + '</div>' : '') +
+    betLine +
+    predLine;
 
-  if (isOpen) card.addEventListener('click', function() { openKoPredict(p); });
+  if (isClickable) card.addEventListener('click', function() { openKoPredict(p); });
   return card;
 }
 

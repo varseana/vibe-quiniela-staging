@@ -378,7 +378,8 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 .bracket { display: flex; align-items: stretch; justify-content: center; gap: 0; min-width: max-content; }
 .ko-round { display: flex; flex-direction: column; min-width: 155px; }
 .ko-round-header { text-align: center; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); padding: 6px; margin: 0 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); font-family: var(--font-display); }
-.ko-round-matches { display: flex; flex-direction: column; justify-content: space-around; flex: 1; gap: 6px; padding: 0 4px; }
+.ko-round-matches { display: flex; flex-direction: column; justify-content: space-around; flex: 1; gap: 8px; padding: 0 4px; }
+.ko-round-matches .partido-card { cursor: pointer; min-width: 200px; }
 
 /* matchup card */
 .ko-matchup {
