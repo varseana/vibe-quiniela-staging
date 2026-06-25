@@ -399,6 +399,7 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
 .ko-matchup__pred { font-size: 9px; color: #22c55e; font-weight: 700; text-align: center; }
 .ko-matchup__status { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .ko-matchup__status.open { color: var(--vibe-purple); }
+.ko-matchup__status.closing { color: #f59e0b; }
 .ko-matchup__status.final { color: var(--text-muted); }
 .ko-matchup__status.coming { color: var(--text-muted); }
 .ko-matchup__score { font-size: 11px; font-weight: 800; color: var(--text-primary); font-family: var(--font-display); text-align: center; margin: 2px 0; }
