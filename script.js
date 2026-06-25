@@ -320,7 +320,10 @@ function getFilteredPartidos() {
 }
 async function loadPartidos() {
   try {
-    allPartidos = await apiGet('getPartidos');
+    const all = await apiGet('getPartidos');
+    // solo mostrar group stage ~ excluir partidos de knockout
+    const koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
+    allPartidos = all.filter(p => koFases.indexOf(p.fase) === -1);
     await loadUserPredictions();
     renderPartidos(getFilteredPartidos());
   } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
