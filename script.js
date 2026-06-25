@@ -325,11 +325,13 @@ function getFilteredPartidos() {
   return list;
 }
 async function loadPartidos() {
+  const el = document.getElementById('partidosGrid');
+  if (!el) return; // partidos section not in this version
   try {
     allPartidos = await apiGet('getPartidos');
     await loadUserPredictions();
     renderPartidos(getFilteredPartidos());
-  } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
+  } catch { el.innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
 }
 function formatFecha(f) { if (!f) return ''; const parts = f.match(/(\d{4})-(\d{2})-(\d{2})/); if (!parts) return f; const d = new Date(+parts[1], +parts[2]-1, +parts[3]); return d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
 function formatHora(h) { if (!h) return ''; const m = String(h).match(/(\d{2}:\d{2})/); return m ? m[1] + ' CST' : h; }
