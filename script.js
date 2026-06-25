@@ -241,24 +241,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
-// predict
-document.getElementById('predictForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const u = getUser(); if (!u) { openLogin(); return; }
-  const msg = document.getElementById('predictMsg');
-  const partidoId = document.getElementById('predPartidoId').value;
-  const golL = Number(document.getElementById('predGolLocal').value);
-  const golV = Number(document.getElementById('predGolVisitante').value);
-  msg.textContent = t('sending'); msg.className = 'form-msg';
-  try {
-    const res = await apiPost({ action:'predict', pid:u.id, partido_id:partidoId, gol_local:golL, gol_visitante:golV });
-    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
-    userPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
-    renderPartidos(getFilteredPartidos());
-    msg.textContent = t('saved'); msg.className = 'form-msg success';
-    setTimeout(closePredict, 1000);
-  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
-});
+// predict (knockout only — handled by bracket IIFE below)
 
 // champion
 function isLocked() { return new Date() >= LOCK_DATE; }
@@ -298,122 +281,7 @@ document.getElementById('btnChampion').addEventListener('click', async () => {
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
-// partidos
-let allPartidos = [];
-let activeFilter = 'all';
-let activeSort = 'date';
-let userPredictions = {}; // { partido_id: { gol_local, gol_visitante } }
-
-async function loadUserPredictions() {
-  const u = getUser(); if (!u) { userPredictions = {}; return; }
-  try {
-    const preds = await apiGet('getPredicciones', { pid: u.id });
-    userPredictions = {};
-    preds.forEach(p => { userPredictions[p.partido_id] = { gol_local: p.gol_local, gol_visitante: p.gol_visitante }; });
-  } catch { userPredictions = {}; }
-}
-
-function getFilteredPartidos() {
-  let list = activeFilter === 'all' ? [...allPartidos] : allPartidos.filter(p => p.status === activeFilter);
-  if (activeSort === 'group') list.sort((a, b) => a.grupo.localeCompare(b.grupo) || a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
-  return list;
-}
-async function loadPartidos() {
-  try {
-    allPartidos = await apiGet('getPartidos');
-    await loadUserPredictions();
-    renderPartidos(getFilteredPartidos());
-  } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
-}
-function formatFecha(f) { if (!f) return ''; const parts = f.match(/(\d{4})-(\d{2})-(\d{2})/); if (!parts) return f; const d = new Date(+parts[1], +parts[2]-1, +parts[3]); return d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
-function formatHora(h) { if (!h) return ''; const m = String(h).match(/(\d{2}:\d{2})/); return m ? m[1] + ' CST' : h; }
-function getMatchDeadline(p) {
-  // deadline = match time - 1 hour (CST, same as stored hours)
-  var parts = p.fecha.match(/(\d{4})-(\d{2})-(\d{2})/);
-  var hParts = (p.hora || '').match(/(\d{2}):(\d{2})/);
-  if (!parts || !hParts) return null;
-  return new Date(+parts[1], +parts[2]-1, +parts[3], +hParts[1]-1, +hParts[2]);
-}
-
-function getBettingStatus(p) {
-  if (p.status === 'finalizado') return { state: 'finished' };
-  var deadline = getMatchDeadline(p);
-  if (!deadline) return { state: 'open' };
-  var now = new Date();
-  var diff = deadline - now;
-  if (diff <= 0) return { state: 'closed' };
-  if (diff <= 12 * 3600000) {
-    var h = Math.floor(diff / 3600000);
-    var m = Math.floor((diff % 3600000) / 60000);
-    return { state: 'closing', label: h > 0 ? h + 'h ' + m + 'm' : m + 'm' };
-  }
-  return { state: 'open' };
-}
-
-function calcPoints(pred, p) {
-  if (!pred || p.status !== 'finalizado' || p.gol_local === '' || p.gol_visitante === '') return null;
-  var rL = Number(p.gol_local), rV = Number(p.gol_visitante);
-  var pL = Number(pred.gol_local), pV = Number(pred.gol_visitante);
-  if (pL === rL && pV === rV) return { pts: 5, label: '+5 Exact!' };
-  var realW = rL > rV ? 'L' : rL < rV ? 'V' : 'E';
-  var predW = pL > pV ? 'L' : pL < pV ? 'V' : 'E';
-  if (predW === realW) return { pts: 2, label: '+2 Correct winner' };
-  return { pts: 0, label: 'No points' };
-}
-
-function renderPartidos(partidos) {
-  const grid = document.getElementById('partidosGrid');
-  if (!partidos.length) { grid.innerHTML = `<div class="glass-card partido-card"><p class="placeholder-text">${t('loading')}</p></div>`; return; }
-  grid.innerHTML = partidos.map(p => {
-    const pred = userPredictions[p.partido_id];
-    const bet = getBettingStatus(p);
-    const pts = calcPoints(pred, p);
-    const isClosed = bet.state === 'closed' || bet.state === 'finished';
-
-    // status badge
-    var statusBadge = '';
-    if (p.status === 'finalizado') statusBadge = '<span class="partido-status finalizado">Final</span>';
-    else statusBadge = '<span class="partido-status pendiente">Score Pending</span>';
-
-    // prediction + points line
-    var predLine = '';
-    if (pred) {
-      predLine = `<div class="partido-prediction">${t('your_pred')}: ${pred.gol_local} - ${pred.gol_visitante}`;
-      if (pts) predLine += ` <span class="pts-badge pts-badge--${pts.pts}">${pts.label}</span>`;
-      predLine += '</div>';
-    }
-
-    // betting status line
-    var betLine = '';
-    if (bet.state === 'open') betLine = '<div class="partido-bet partido-bet--open">Open</div>';
-    else if (bet.state === 'closing') betLine = `<div class="partido-bet partido-bet--closing">Closes in ${bet.label}</div>`;
-    else if (bet.state === 'closed') betLine = '<div class="partido-bet partido-bet--closed">Betting Closed</div>';
-
-    var cardClass = 'glass-card partido-card' + (isClosed ? ' partido-card--locked' : '');
-    var onclick = isClosed ? '' : `onclick='openPredict(${JSON.stringify(p)})'`;
-
-    return `
-    <div class="${cardClass}" ${onclick}>
-      <div class="partido-header"><span class="partido-fase">${p.fase} ${p.grupo||''}</span>${statusBadge}</div>
-      <div class="partido-teams"><div class="partido-team">${p.local}</div>${p.status==='finalizado'?`<div class="partido-score">${p.gol_local} - ${p.gol_visitante}</div>`:'<div class="partido-vs">vs</div>'}<div class="partido-team">${p.visitante}</div></div>
-      <div class="partido-date">${formatFecha(p.fecha)} - ${formatHora(p.hora)}</div>
-      ${betLine}
-      ${predLine}
-    </div>`;
-  }).join('');
-}
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active'); activeFilter = btn.dataset.filter; renderPartidos(getFilteredPartidos());
-  });
-});
-document.querySelectorAll('.sort-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active'); activeSort = btn.dataset.sort; renderPartidos(getFilteredPartidos());
-  });
-});
+// partidos removed — knockout is the main prediction system
 
 // leaderboard
 async function loadLeaderboard() {
@@ -479,17 +347,17 @@ window.addEventListener('scroll', () => backToTop.classList.toggle('visible', wi
 backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 // refresh betting status every 60s
-setInterval(() => { if (allPartidos.length) renderPartidos(getFilteredPartidos()); }, 60000);
+setInterval(() => { /* knockout auto-refresh placeholder */ }, 60000);
 
 // init
-startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard();
+startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadLeaderboard();
 
 // knockout bracket (interactive)
 (function() {
   var grid = document.getElementById('bracketGrid');
   if (!grid) return;
 
-  // real bracket data ~ match IDs from FIFA 2026 bracket structure
+  // real bracket data ~ FIFA 2026 knockout structure
   var KO_MATCHES = {
     r32l: [
       {id:'R32L-1',a:'1E',b:'3ABCDF',info:'Jun 28 · Boston'},
@@ -536,19 +404,37 @@ startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); upda
     ]
   };
 
-  // round unlock logic ~ each round unlocks when the previous one has all results
-  // for now: R32 is open, rest locked until we implement progressive unlock from API
+  // only R32 is open ~ rest coming soon
   var ROUND_STATUS = { r32l:'open', r16l:'locked', qfl:'locked', semil:'locked', finalm:'locked', semir:'locked', qfr:'locked', r16r:'locked', r32r:'open' };
-
   var ROUND_LABELS = { r32l:'Round of 32', r16l:'Round of 16', qfl:'Quarter-Finals', semil:'Semi-Finals', finalm:'Final', semir:'Semi-Finals', qfr:'Quarter-Finals', r16r:'Round of 16', r32r:'Round of 32' };
   var ROUND_ORDER = ['r32l','r16l','qfl','semil','finalm','semir','qfr','r16r','r32r'];
 
-  var koPredictions = {}; // { matchId: { gol_a, gol_b } }
+  var koPredictions = {};
 
-  // load predictions from localStorage (temp until API)
-  try { koPredictions = JSON.parse(localStorage.getItem('vibe_ko_preds') || '{}'); } catch(e) { koPredictions = {}; }
+  // load predictions from API
+  async function loadKoPredictions() {
+    var u = getUser(); if (!u) { koPredictions = {}; renderBracket(); return; }
+    try {
+      var preds = await apiGet('getPredicciones', { pid: u.id });
+      koPredictions = {};
+      // knockout predictions have partido_id starting with R32/R16/QF/SF/FINAL
+      preds.forEach(function(p) {
+        if (p.partido_id && p.partido_id.match(/^(R32|R16|QF|SF|FINAL)/)) {
+          koPredictions[p.partido_id] = { gol_a: Number(p.gol_local), gol_b: Number(p.gol_visitante) };
+        }
+      });
+    } catch(e) { koPredictions = {}; }
+    renderBracket();
+  }
 
-  function saveKoPreds() { localStorage.setItem('vibe_ko_preds', JSON.stringify(koPredictions)); }
+  // save prediction to API
+  async function saveKoPrediction(matchId, golA, golB) {
+    var u = getUser(); if (!u) return;
+    koPredictions[matchId] = { gol_a: golA, gol_b: golB };
+    try {
+      await apiPost({ action:'predict', pid:u.id, partido_id:matchId, gol_local:golA, gol_visitante:golB });
+    } catch(e) { console.error('ko save failed:', e); }
+  }
 
   function renderBracket() {
     grid.innerHTML = '';
@@ -597,12 +483,12 @@ startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); upda
         }
 
         var status = document.createElement('div');
-        if (isLocked) { status.className = 'ko-matchup__status ko-matchup__status--locked'; status.textContent = 'LOCKED'; }
+        if (isLocked) { status.className = 'ko-matchup__status ko-matchup__status--locked'; status.textContent = 'COMING SOON'; }
         else { status.className = 'ko-matchup__status ko-matchup__status--open'; status.textContent = pred ? 'PREDICTED' : 'OPEN'; }
         card.appendChild(status);
 
         if (!isLocked) {
-          card.addEventListener('click', function() { openKoPredictModal(m); });
+          card.addEventListener('click', function() { openKoPredict(m); });
         }
 
         matches.appendChild(card);
@@ -613,8 +499,8 @@ startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); upda
     });
   }
 
-  // predict modal (reuses the existing predict overlay)
-  function openKoPredictModal(m) {
+  // predict modal for knockout
+  function openKoPredict(m) {
     if (!getUser()) { openLogin(); return; }
     document.getElementById('predPartidoId').value = m.id;
     document.getElementById('predLocal').textContent = m.a;
@@ -626,30 +512,28 @@ startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); upda
     document.getElementById('predictMsg').textContent = '';
     document.getElementById('predictOverlay').classList.add('open');
 
-    // override submit for knockout
     var form = document.getElementById('predictForm');
-    var handler = function(e) {
-      e.preventDefault();
-      var golA = Number(document.getElementById('predGolLocal').value);
-      var golB = Number(document.getElementById('predGolVisitante').value);
-      var msg = document.getElementById('predictMsg');
-      if (document.getElementById('predGolLocal').value === '' || document.getElementById('predGolVisitante').value === '') { msg.textContent = 'Enter both scores'; msg.className = 'form-msg error'; return; }
-      koPredictions[m.id] = { gol_a: golA, gol_b: golB };
-      saveKoPreds();
-      msg.textContent = t('saved'); msg.className = 'form-msg success';
-      setTimeout(function() { closePredict(); renderBracket(); }, 600);
-      form.removeEventListener('submit', handler);
-    };
-    // remove old listeners by cloning
     var newForm = form.cloneNode(true);
     form.parentNode.replaceChild(newForm, form);
-    newForm.addEventListener('submit', handler);
-    // rebind close
+
+    newForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var msg = document.getElementById('predictMsg');
+      var golA = document.getElementById('predGolLocal').value;
+      var golB = document.getElementById('predGolVisitante').value;
+      if (golA === '' || golB === '') { msg.textContent = 'Enter both scores'; msg.className = 'form-msg error'; return; }
+      msg.textContent = t('sending'); msg.className = 'form-msg';
+      await saveKoPrediction(m.id, Number(golA), Number(golB));
+      msg.textContent = t('saved'); msg.className = 'form-msg success';
+      setTimeout(function() { closePredict(); renderBracket(); }, 600);
+    });
+
     document.getElementById('predictClose').addEventListener('click', closePredict);
     document.getElementById('predictOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) closePredict(); });
   }
 
-  renderBracket();
+  // init knockout
+  loadKoPredictions();
 })();
 
 // burger menu
