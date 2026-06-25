@@ -640,9 +640,7 @@ function renderBracket(){
     (KO_MATCHES[key]||[]).forEach(function(m){
       var pred=koPreds[m.id];
       var card=document.createElement('div');
-      card.className='matchup'+(open?'',' locked')+(pred?' predicted':'');
-      if(!open)card.classList.add('locked');
-      if(pred)card.classList.add('predicted');
+      card.className='matchup'+(!open?' locked':'')+(pred?' predicted':'');
       card.innerHTML=
         '<div class="matchup__teams">'+
           '<div class="matchup__team">'+esc(m.a)+'</div>'+
