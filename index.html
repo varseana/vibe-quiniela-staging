@@ -5,726 +5,234 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIBE Quiniela - World Cup 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800;900&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0a18;--bg2:#0e0e22;
-  --glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.1);
-  --text:#f0f0f5;--text2:#a0a0c0;--muted:#606080;
-  --purple:#9b30ff;--magenta:#c850c0;--pink:#ff6ec7;--green:#22c55e;
-  --ease:cubic-bezier(0.4,0,0.2,1);--radius:12px;
-}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-
-/* particles + blobs */
-.particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.particle{position:absolute;bottom:-10px;background:var(--purple);border-radius:50%;animation:floatUp linear infinite}
-@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-110vh) rotate(360deg);opacity:0}}
-.blob{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;opacity:.1}
-.blob-1{width:500px;height:500px;background:var(--purple);top:-100px;right:-100px}
-.blob-2{width:400px;height:400px;background:var(--magenta);bottom:20%;left:-80px}
-.blob-3{width:300px;height:300px;background:var(--pink);top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06}
-
-/* nav */
-.nav{position:sticky;top:0;z-index:100;background:rgba(10,10,24,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
-.nav-brand img{height:32px}
-.nav-links{display:flex;gap:4px;align-items:center}
-.nav-link{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;color:var(--text2);transition:all .15s}
-.nav-link:hover,.nav-link.active{background:rgba(155,48,255,0.15);color:var(--purple)}
-.nav-right{display:flex;align-items:center;gap:8px}
-.btn{padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
-.btn-glass{background:var(--glass);border:1px solid var(--glass-border);color:var(--text2)}
-.btn-glass:hover{border-color:var(--purple);color:var(--purple)}
-.btn-glow{background:var(--purple);color:#fff;box-shadow:0 0 20px rgba(155,48,255,0.4)}
-.btn-glow:hover{background:#8a20ef;box-shadow:0 0 28px rgba(155,48,255,0.6)}
-.btn-full{width:100%;margin-top:8px;padding:10px}
-.user-alias{font-size:12px;font-weight:600;color:var(--purple)}
-
-/* sections */
-.section{padding:60px 24px;position:relative;z-index:1}
-.section-alt{background:rgba(255,255,255,0.02)}
-.container{max-width:900px;margin:0 auto}
-.section-header{text-align:center;margin-bottom:32px}
-.section-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--purple);background:rgba(155,48,255,0.1);padding:4px 14px;border-radius:50px;margin-bottom:10px}
-.section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,4vw,36px);font-weight:800}
-.gradient-text{background:linear-gradient(135deg,var(--purple),var(--magenta),var(--pink));background-size:200% 200%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:grad 4s ease infinite}
-@keyframes grad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-
-/* hero */
-#home{min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:80px}
-.hero-logo{width:80px;margin-bottom:20px}
-.hero-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:900;margin-bottom:12px}
-.hero-sub{color:var(--text2);font-size:15px;max-width:500px;margin:0 auto 24px;line-height:1.6}
-.hero-actions{display:flex;gap:12px;justify-content:center;margin-bottom:32px}
-.countdown{display:flex;gap:16px;justify-content:center;margin-bottom:32px}
-.countdown-item{text-align:center}
-.countdown-num{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;display:block;background:linear-gradient(135deg,var(--purple),var(--magenta));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.countdown-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.prizes{margin-top:8px}
-.prizes-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px}
-.prizes-grid{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.prize-card{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:24px 16px;text-align:center;min-width:110px;position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
-.prize-card:hover{transform:translateY(-4px)}
-.prize-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
-.prize-card--1st{border-color:rgba(255,215,0,0.3);animation:goldPulse 3s ease-in-out infinite}
-.prize-card--1st:hover{box-shadow:0 8px 40px rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.5)}
-.prize-card--1st::before{background:linear-gradient(90deg,#ffd700,#ffed4a,#ffd700)}
-.prize-card--1st .prize-icon{background:linear-gradient(135deg,#ffd700,#ffed4a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.prize-card--1st .prize-amount{color:#ffd700}
-.prize-card--2nd{border-color:rgba(192,192,220,0.3)}
-.prize-card--2nd:hover{box-shadow:0 8px 40px rgba(192,192,220,0.12);border-color:rgba(192,192,220,0.5)}
-.prize-card--2nd::before{background:linear-gradient(90deg,#c0c0dc,#e8e8f0,#c0c0dc)}
-.prize-card--2nd .prize-icon{background:linear-gradient(135deg,#c0c0dc,#e8e8f0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.prize-card--2nd .prize-amount{color:#c0c0dc}
-.prize-card--3rd{border-color:rgba(205,127,50,0.3)}
-.prize-card--3rd:hover{box-shadow:0 8px 40px rgba(205,127,50,0.12);border-color:rgba(205,127,50,0.5)}
-.prize-card--3rd::before{background:linear-gradient(90deg,#cd7f32,#daa06d,#cd7f32)}
-.prize-card--3rd .prize-icon{background:linear-gradient(135deg,#cd7f32,#daa06d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.prize-card--3rd .prize-amount{color:#cd7f32}
-.prize-card--raffle{border-color:rgba(155,48,255,0.3)}
-.prize-card--raffle:hover{box-shadow:0 8px 40px rgba(155,48,255,0.15);border-color:rgba(155,48,255,0.5)}
-.prize-card--raffle::before{background:linear-gradient(90deg,var(--purple),var(--magenta),var(--purple))}
-.prize-card--raffle .prize-icon{background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.prize-card--raffle .prize-amount{color:var(--purple)}
-.prize-icon{font-size:32px;margin-bottom:8px;display:block}
-.prize-rank{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px}
-.prize-amount{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
-.prize-currency{font-size:11px;color:var(--muted);font-weight:500}
-@keyframes goldPulse{0%,100%{box-shadow:0 4px 20px rgba(255,215,0,0.08)}50%{box-shadow:0 4px 28px rgba(255,215,0,0.2),0 0 40px rgba(255,215,0,0.08)}}
-
-/* rules */
-.reglas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
-.glass-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:20px}
-.regla-pts{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--magenta));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-.regla-title{font-size:14px;font-weight:700;margin-bottom:6px}
-.regla-desc{font-size:12px;color:var(--text2);line-height:1.5}
-.reglas-list{padding-left:16px;display:flex;flex-direction:column;gap:6px}
-.reglas-list li{font-size:12px;color:var(--text2);line-height:1.5}
-
-/* champion */
-.champion-card{text-align:center;max-width:400px;margin:0 auto;padding:28px}
-.champion-select{width:100%;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:20px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;margin-bottom:12px;outline:none}
-.champion-select:focus{border-color:var(--purple)}
-.champion-current{font-size:13px;color:var(--text2);margin-bottom:6px}
-.champion-current strong{color:var(--purple)}
-.champ-countdown{font-size:11px;color:var(--muted);margin-top:8px}
-.form-msg{font-size:12px;margin-top:8px;text-align:center}
-.form-msg.error{color:#f87171}
-.form-msg.success{color:var(--green)}
-
-/* bracket */
-#knockout{padding:60px 0}
-.bracket-section-header{text-align:center;padding:0 24px 24px}
-.bracket-scroll{overflow-x:auto;padding:16px 24px;-webkit-overflow-scrolling:touch}
-.bracket-scroll::-webkit-scrollbar{height:5px}
-.bracket-scroll::-webkit-scrollbar-thumb{background:rgba(155,48,255,0.3);border-radius:3px}
-.bracket{display:flex;align-items:stretch;justify-content:center;gap:0;min-width:max-content}
-.round{display:flex;flex-direction:column;min-width:160px}
-.round-header{text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);padding:8px;margin:0 6px 8px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.round-matches{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:6px;padding:0 6px}
-.final-col{align-items:center;justify-content:center;min-width:200px;padding:16px 0}
-.final-col .round-header{border:none;margin-bottom:8px}
-.trophy-wrap{position:relative;display:flex;align-items:center;justify-content:center}
-.trophy-glow{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.1) 0%,transparent 70%);animation:glowPulse 3s ease-in-out infinite}
-.trophy-img{width:160px;height:auto;position:relative;z-index:1;filter:drop-shadow(0 0 30px rgba(255,215,0,0.35)) drop-shadow(0 0 60px rgba(155,48,255,0.2));animation:trophyFloat 4s ease-in-out infinite}
-.final-label{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-top:8px;text-align:center}
-@keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes glowPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
-
-/* matchup card */
-.matchup{
-  background:var(--glass);border:1px solid var(--glass-border);
-  border-radius:10px;padding:10px 12px;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;transition:all .2s var(--ease);
-}
-.matchup:hover{border-color:rgba(155,48,255,0.5);background:rgba(155,48,255,0.08);transform:translateY(-1px);box-shadow:0 4px 20px rgba(155,48,255,0.2)}
-.matchup.locked{opacity:.4;pointer-events:none;cursor:default}
-.matchup.predicted{border-color:rgba(34,197,94,0.4)}
-.matchup.predicted:hover{border-color:rgba(34,197,94,0.6);box-shadow:0 4px 20px rgba(34,197,94,0.15)}
-.matchup__teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;width:100%}
-.matchup__team{font-size:10px;font-weight:600;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.matchup__team:first-child{text-align:right}
-.matchup__team:last-child{text-align:left}
-.matchup__vs{font-size:9px;color:var(--muted);font-weight:600;text-align:center}
-.matchup__info{font-size:8px;color:var(--muted);text-align:center}
-.matchup__pred{font-size:9px;color:var(--green);font-weight:700;text-align:center}
-.matchup__status{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:center}
-.matchup__status.open{color:var(--purple)}
-.matchup__status.coming{color:var(--muted)}
-.ko-footer{text-align:center;padding:20px 24px;font-size:12px;color:var(--muted)}
-.rotate-hint{display:none;font-size:11px;color:var(--muted);text-align:center;padding:0 24px 16px;align-items:center;justify-content:center;gap:6px}
-
-/* leaderboard */
-.leaderboard-card{overflow:hidden}
-.lb-table{width:100%;border-collapse:collapse}
-.lb-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.06)}
-.lb-table td{padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.04)}
-.lb-table tr:last-child td{border:none}
-.lb-table tr:hover td{background:rgba(155,48,255,0.05)}
-.lb-table tr.me td{background:rgba(155,48,255,0.08)}
-.lb-table tr.me td:first-child{border-left:2px solid var(--purple)}
-.rank-1 .rank-num,.rank-2 .rank-num,.rank-3 .rank-num{font-weight:800}
-.rank-1 .rank-num{color:#ffd700}
-.rank-2 .rank-num{color:#c0c0c0}
-.rank-3 .rank-num{color:#cd7f32}
-.you-badge{background:rgba(155,48,255,0.2);color:var(--purple);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px}
-
-/* modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:999;padding:20px}
-.modal-overlay.open{display:flex}
-.modal{background:#0e0e22;border:1px solid var(--glass-border);border-radius:18px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.modal-header h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700}
-.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
-.modal-body{padding:22px;display:flex;flex-direction:column;gap:14px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-group label{font-size:11px;font-weight:600;color:var(--text2)}
-.form-group input,.form-group select{padding:9px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none}
-.form-group input:focus,.form-group select:focus{border-color:var(--purple)}
-.form-switch{font-size:12px;color:var(--text2);text-align:center}
-.form-switch a{color:var(--purple)}
-
-/* predict modal */
-.predict-score{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
-.score-input{width:60px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-size:22px;font-weight:800;text-align:center;font-family:'Space Grotesk',sans-serif;outline:none}
-.score-input:focus{border-color:var(--purple)}
-.predict-team{font-size:13px;font-weight:700;flex:1;text-align:center;color:var(--text2)}
-.score-vs{font-size:14px;color:var(--muted);font-weight:600}
-
-@media(max-width:768px){
-  .nav-links{display:none}
-  .rotate-hint{display:flex}
-  .hero-actions{flex-direction:column;align-items:center}
-  .prizes-grid{gap:8px}
-  .prize-card{min-width:80px;padding:12px 14px}
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
 <div class="particles" id="particles"></div>
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
 <div class="blob blob-3"></div>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-brand"><img src="vibe-logo.png" alt="VIBE"></div>
-  <div class="nav-links">
-    <a href="#home" class="nav-link active">Home</a>
-    <a href="#reglas" class="nav-link">Rules</a>
-    <a href="#champion" class="nav-link">Champion</a>
-    <a href="#knockout" class="nav-link">Knockout</a>
-    <a href="#leaderboard" class="nav-link">Leaderboard</a>
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="nav-brand"><img src="vibe-logo.png" alt="VIBE" class="nav-logo-img"></div>
+    <div class="nav-links" id="navLinks">
+      <a href="#home" class="nav-link active" data-i18n="nav_home">Home</a>
+      <a href="#reglas" class="nav-link" data-i18n="nav_rules">Rules</a>
+      <a href="#champion" class="nav-link" data-i18n="nav_champion">Champion</a>
+      <a href="#knockout" class="nav-link">Knockout</a>
+      <a href="#leaderboard" class="nav-link">Leaderboard</a>
+      <div class="nav-glider" id="navGlider"></div>
+    </div>
+    <div class="nav-right">
+      <button class="lang-toggle" id="langToggle">ES</button>
+      <div class="nav-user" id="navUser">
+        <button class="btn btn-glass btn-sm" onclick="openLogin()" data-i18n="nav_login">Login</button>
+        <button class="btn btn-glow btn-sm" onclick="openRegister()" data-i18n="nav_register">Register</button>
+      </div>
+    </div>
   </div>
-  <div class="nav-right" id="navUser">
-    <button class="btn btn-glass" onclick="openLogin()">Login</button>
-    <button class="btn btn-glow" onclick="openRegister()">Register</button>
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-user" id="mobileUser"></div>
+    <div class="mobile-divider"></div>
+    <a href="#home" class="mobile-link" data-i18n="nav_home">Home</a>
+    <a href="#reglas" class="mobile-link" data-i18n="nav_rules">Rules</a>
+    <a href="#champion" class="mobile-link" data-i18n="nav_champion">Champion</a>
+    <a href="#knockout" class="mobile-link">Knockout</a>
+    <a href="#leaderboard" class="mobile-link">Leaderboard</a>
   </div>
 </nav>
 
-<!-- HOME -->
-<section class="section" id="home">
-  <div style="text-align:center;max-width:600px;margin:0 auto">
+<section class="section hero" id="home">
+  <div class="hero-content">
     <img src="vibe-logo.png" alt="VIBE" class="hero-logo">
-    <h1 class="hero-title"><span class="gradient-text">World Cup Predictions 2026</span></h1>
-    <p class="hero-sub">Predict the results of the FIFA World Cup. Compete with all of TSE Costa Rica. Win prizes.</p>
+    <h1 class="hero-title"><span class="gradient-text" data-i18n="hero_title">World Cup Predictions 2026</span></h1>
+    <p class="hero-subtitle" data-i18n="hero_sub">Predict the results of the FIFA World Cup USA/Mexico/Canada. Compete with all of TSE. Win prizes.</p>
     <div class="countdown" id="countdown">
-      <div class="countdown-item"><span class="countdown-num" id="cdDays">--</span><span class="countdown-label">Days</span></div>
-      <div class="countdown-item"><span class="countdown-num" id="cdHours">--</span><span class="countdown-label">Hours</span></div>
+      <div class="countdown-item"><span class="countdown-num" id="cdDays">--</span><span class="countdown-label" data-i18n="days">Days</span></div>
+      <div class="countdown-item"><span class="countdown-num" id="cdHours">--</span><span class="countdown-label" data-i18n="hours">Hours</span></div>
       <div class="countdown-item"><span class="countdown-num" id="cdMins">--</span><span class="countdown-label">Min</span></div>
       <div class="countdown-item"><span class="countdown-num" id="cdSecs">--</span><span class="countdown-label">Sec</span></div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-glow" id="btnJoin">Join the Pool</button>
-      <a href="#reglas" class="btn btn-glass">View Rules</a>
+      <button class="btn btn-glow" id="btnRegister" data-i18n="hero_join">Join the Pool</button>
+      <a href="#reglas" class="btn btn-glass" data-i18n="hero_rules">View Rules</a>
     </div>
     <div class="prizes">
-      <div class="prizes-title">Prizes</div>
+      <div class="prizes-title" data-i18n="prizes_title">Prizes</div>
       <div class="prizes-grid">
-        <div class="prize-card prize-card--1st"><span class="prize-icon">&#127942;</span><div class="prize-rank">1st Place</div><div class="prize-amount">&#8353;50,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card prize-card--2nd"><span class="prize-icon">&#129352;</span><div class="prize-rank">2nd Place</div><div class="prize-amount">&#8353;35,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card prize-card--3rd"><span class="prize-icon">&#129353;</span><div class="prize-rank">3rd Place</div><div class="prize-amount">&#8353;25,000</div><div class="prize-currency">colones</div></div>
-        <div class="prize-card prize-card--raffle"><span class="prize-icon">&#127922;</span><div class="prize-rank">Raffle</div><div class="prize-amount">&#8353;20,000</div><div class="prize-currency">all participants</div></div>
+        <div class="prize-card prize-card--1st"><span class="prize-icon">&#127942;</span><div class="prize-rank" data-i18n="prize_1st">1st Place</div><div class="prize-amount">&#8353;50,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--2nd"><span class="prize-icon">&#129352;</span><div class="prize-rank" data-i18n="prize_2nd">2nd Place</div><div class="prize-amount">&#8353;35,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--3rd"><span class="prize-icon">&#129353;</span><div class="prize-rank" data-i18n="prize_3rd">3rd Place</div><div class="prize-amount">&#8353;25,000</div><div class="prize-currency">colones</div></div>
+        <div class="prize-card prize-card--raffle"><span class="prize-icon">&#127922;</span><div class="prize-rank" data-i18n="prize_raffle">Raffle</div><div class="prize-amount">&#8353;20,000</div><div class="prize-currency" data-i18n="prize_raffle_desc">all participants</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- RULES -->
 <section class="section section-alt" id="reglas">
   <div class="container">
     <div class="section-header">
-      <span class="section-badge">Rules</span>
-      <h2 class="section-title"><span class="gradient-text">Point System</span></h2>
+      <span class="section-badge" data-i18n="rules_badge">Rules</span>
+      <h2 class="section-title"><span class="gradient-text" data-i18n="rules_title">Point System</span></h2>
     </div>
     <div class="reglas-grid">
-      <div class="glass-card"><div class="regla-pts">5 pts</div><h4 class="regla-title">Exact Score</h4><p class="regla-desc">Predict the exact score of the match.</p></div>
-      <div class="glass-card"><div class="regla-pts">2 pts</div><h4 class="regla-title">Correct Winner</h4><p class="regla-desc">Predict who wins or a draw, without the exact score.</p></div>
-      <div class="glass-card"><div class="regla-pts">10 pts</div><h4 class="regla-title">Champion Bonus</h4><p class="regla-desc">Correctly predict the World Cup winner. Locks Jun 24.</p></div>
+      <div class="glass-card regla-card"><div class="regla-pts">5 pts</div><h4 class="regla-title" data-i18n="r_exact">Exact Result</h4><p class="regla-desc" data-i18n="r_exact_d">Predict the exact score. E.g. you predict 2-1 and the result is 2-1.</p></div>
+      <div class="glass-card regla-card"><div class="regla-pts">2 pts</div><h4 class="regla-title" data-i18n="r_winner">Correct Winner</h4><p class="regla-desc" data-i18n="r_winner_d">Predict who wins or a draw, without getting the exact score.</p></div>
+      <div class="glass-card regla-card"><div class="regla-pts">10 pts</div><h4 class="regla-title" data-i18n="r_champ">Champion Bonus</h4><p class="regla-desc" data-i18n="r_champ_d">Correctly predict the World Cup winner. Must be locked before the tournament starts.</p></div>
     </div>
-    <div class="glass-card">
-      <h4 class="regla-title" style="margin-bottom:12px">General Rules</h4>
+    <div class="glass-card reglas-extra">
+      <h4 class="regla-title" data-i18n="r_general">General Rules</h4>
       <ul class="reglas-list">
-        <li>Predictions close 1 hour before each match.</li>
-        <li>Only one prediction per match. You can modify before deadline.</li>
-        <li>Tiebreaker: most exact results wins.</li>
-        <li>Champion pick locked. No changes after Jun 24, 2026.</li>
-        <li>Rounds of 16, QF, SF and Final unlock progressively.</li>
+        <li data-i18n="r1">Predictions close 1 hour before each match.</li>
+        <li data-i18n="r2">Only one prediction per match.</li>
+        <li data-i18n="r3">You can modify your prediction before the deadline.</li>
+        <li data-i18n="r4">Tiebreaker: most exact results wins.</li>
+        <li data-i18n="r5">Prizes will be announced at the start of the tournament.</li>
+        <li data-i18n="r6">Champion pick locks on June 24, 2026. No changes after that.</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- CHAMPION -->
 <section class="section" id="champion">
   <div class="container">
     <div class="section-header">
-      <span class="section-badge">Bonus</span>
-      <h2 class="section-title"><span class="gradient-text">Pick Your Champion</span></h2>
+      <span class="section-badge" data-i18n="champ_badge">Bonus</span>
+      <h2 class="section-title"><span class="gradient-text" data-i18n="champ_title">Pick Your Champion</span></h2>
+      <p class="section-desc" data-i18n="champ_desc">Choose who you think will win the World Cup. Worth 10 bonus points. Locks when the tournament starts.</p>
     </div>
     <div class="glass-card champion-card">
-      <div id="championInner">
+      <div class="champion-inner" id="championInner">
         <select id="championSelect" class="champion-select"><option value="">-- Select a team --</option></select>
-        <button class="btn btn-glow btn-full" id="btnChampion">Save Pick</button>
+        <button class="btn btn-glow" id="btnChampion" data-i18n="champ_save">Save Pick</button>
       </div>
       <div class="champion-current" id="championCurrent"></div>
-      <div id="championLocked" style="display:none;font-size:13px;color:var(--muted);margin-top:8px">Champion picks are locked.</div>
+      <div class="champion-locked" id="championLocked" style="display:none"><span data-i18n="champ_locked">Predictions are locked. The tournament has started.</span></div>
       <div class="champ-countdown" id="champCountdown"></div>
       <p class="form-msg" id="championMsg"></p>
     </div>
   </div>
 </section>
 
-<!-- KNOCKOUT BRACKET -->
 <section class="section section-alt" id="knockout">
-  <div class="bracket-section-header">
-    <span class="section-badge">Elimination</span>
-    <h2 class="section-title" style="font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,4vw,36px);font-weight:800"><span class="gradient-text">Knockout Bracket</span></h2>
-    <p style="color:var(--text2);font-size:13px;margin-top:8px">Round of 32 is open. Other rounds unlock progressively.</p>
-  </div>
-  <div class="bracket-scroll">
-    <div class="bracket">
-      <div class="round"><div class="round-header">Round of 32</div><div class="round-matches" id="r32l"></div></div>
-      <div class="round"><div class="round-header">Round of 16</div><div class="round-matches" id="r16l"></div></div>
-      <div class="round"><div class="round-header">Quarter-Finals</div><div class="round-matches" id="qfl"></div></div>
-      <div class="round"><div class="round-header">Semi-Finals</div><div class="round-matches" id="semil"></div></div>
-      <div class="round final-col">
-        <div class="round-header">Final</div>
-        <div class="trophy-wrap">
-          <div class="trophy-glow"></div>
-          <img src="trophy.png" alt="World Cup Trophy" class="trophy-img">
-        </div>
-        <div class="final-label">World Champions</div>
+  <div class="knockout-wrapper">
+    <div class="knockout-content">
+      <div class="section-header" style="text-align:center;padding:20px 0 10px;width:100%">
+        <span class="section-badge">Elimination</span>
+        <h2 class="section-title"><span class="gradient-text">Knockout Bracket</span></h2>
+        <p class="section-desc" style="margin-top:8px">Click a match to predict. Rounds unlock progressively.</p>
       </div>
-      <div class="round"><div class="round-header">Semi-Finals</div><div class="round-matches" id="semir"></div></div>
-      <div class="round"><div class="round-header">Quarter-Finals</div><div class="round-matches" id="qfr"></div></div>
-      <div class="round"><div class="round-header">Round of 16</div><div class="round-matches" id="r16r"></div></div>
-      <div class="round"><div class="round-header">Round of 32</div><div class="round-matches" id="r32r"></div></div>
+      <div class="bracket-scroll">
+        <div class="bracket" id="bracketGrid"></div>
+      </div>
+      <p class="ko-rotate-hint"><svg class="rotate-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M12 18h.01"/></svg><span>Rotate your device or view on PC for best experience.</span></p>
     </div>
   </div>
-  <div class="rotate-hint" id="rotateHint">📱 Rotate your device for a better view.</div>
-  <div class="ko-footer">5 pts exact score · 2 pts correct winner · Rounds unlock as the tournament progresses</div>
 </section>
 
-<!-- LEADERBOARD -->
 <section class="section" id="leaderboard">
   <div class="container">
     <div class="section-header">
       <span class="section-badge">Leaderboard</span>
-      <h2 class="section-title"><span class="gradient-text">Standings</span></h2>
+      <h2 class="section-title"><span class="gradient-text" data-i18n="lb_title">Standings</span></h2>
     </div>
     <div class="glass-card leaderboard-card">
-      <table class="lb-table">
-        <thead><tr><th>#</th><th>Player</th><th>Exact</th><th>Correct</th><th>Champ</th><th>Points</th></tr></thead>
-        <tbody id="lbBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
+      <table class="leaderboard-table" id="leaderboardTable">
+        <thead><tr><th>#</th><th data-i18n="lb_player">Player</th><th data-i18n="lb_exact">Exact</th><th data-i18n="lb_correct">Correct</th><th data-i18n="lb_champ">Champ</th><th data-i18n="lb_pts">Points</th></tr></thead>
+        <tbody id="leaderboardBody"><tr><td colspan="6" class="placeholder-text" data-i18n="loading">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
 </section>
 
-<footer style="padding:24px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid rgba(255,255,255,0.05);position:relative;z-index:1">
-  <img src="vibe-logo.png" alt="VIBE" style="height:24px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;opacity:.6">
-  VIBE TSE · Visibility | Information | Bridge | Engagement
-</footer>
-
 <!-- REGISTER MODAL -->
 <div class="modal-overlay" id="registerOverlay">
-  <div class="modal">
-    <div class="modal-header"><h3 class="gradient-text">Register</h3><button class="modal-close" id="registerClose">&times;</button></div>
-    <div class="modal-body">
-      <form id="registerForm">
-        <div class="form-group"><label>Alias (Amazon)</label><input type="text" id="regAlias" required maxlength="20" placeholder="e.g. varseana" autocomplete="off"></div>
-        <div class="form-group"><label>Full Name</label><input type="text" id="regNombre" required placeholder="e.g. Sean Vargas"></div>
-        <div class="form-group"><label>Email (Amazon)</label><input type="email" id="regEmail" required placeholder="alias@amazon.com"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="regPassword" required minlength="4" placeholder="Min 4 characters"></div>
-        <div class="form-group"><label>Confirm Password</label><input type="password" id="regPasswordConfirm" required minlength="4"></div>
-        <button type="submit" class="btn btn-glow btn-full">Register</button>
-        <p class="form-msg" id="regMsg"></p>
-        <p class="form-switch" style="margin-top:8px"><a href="#" id="switchToLogin">Already have an account? Login</a></p>
-      </form>
-    </div>
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="reg_title">Register</h3><button class="modal-close" id="registerClose">&times;</button></div>
+    <form id="registerForm">
+      <div class="form-group"><label data-i18n="reg_alias">Alias (Amazon)</label><input type="text" id="regAlias" required maxlength="20" placeholder="e.g. varseana"></div>
+      <div class="form-group"><label data-i18n="reg_name">Full Name</label><input type="text" id="regNombre" required placeholder="e.g. Sean Vargas"></div>
+      <div class="form-group"><label data-i18n="reg_email">Email (Amazon)</label><input type="email" id="regEmail" required placeholder="e.g. username@amazon.com"></div>
+      <div class="form-group"><label data-i18n="reg_password">Password</label><input type="password" id="regPassword" required minlength="4" placeholder="Min 4 characters"></div>
+      <div class="form-group"><label data-i18n="reg_password_confirm">Confirm Password</label><input type="password" id="regPasswordConfirm" required minlength="4"></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="reg_submit">Register</button>
+      <p class="form-msg" id="regMsg"></p>
+      <p class="form-switch"><a href="#" id="switchToLogin" data-i18n="reg_switch">Already have an account? Login</a></p>
+    </form>
   </div>
 </div>
 
 <!-- LOGIN MODAL -->
 <div class="modal-overlay" id="loginOverlay">
-  <div class="modal">
-    <div class="modal-header"><h3 class="gradient-text">Login</h3><button class="modal-close" id="loginClose">&times;</button></div>
-    <div class="modal-body">
-      <form id="loginForm">
-        <div class="form-group"><label>Alias</label><input type="text" id="loginAlias" required maxlength="20" placeholder="e.g. varseana"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
-        <button type="submit" class="btn btn-glow btn-full">Login</button>
-        <p class="form-msg" id="loginMsg"></p>
-        <p class="form-switch" style="margin-top:8px"><a href="#" id="switchToRegister">No account? Register</a></p>
-      </form>
-    </div>
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="login_title">Login</h3><button class="modal-close" id="loginClose">&times;</button></div>
+    <form id="loginForm">
+      <div class="form-group"><label data-i18n="login_alias">Alias</label><input type="text" id="loginAlias" required maxlength="20" placeholder="e.g. varseana"></div>
+      <div class="form-group"><label data-i18n="login_password">Password</label><input type="password" id="loginPassword" required></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="login_submit">Login</button>
+      <p class="form-msg" id="loginMsg"></p>
+      <p class="form-switch"><a href="#" id="switchToRegister" data-i18n="login_switch">Don't have an account? Register</a></p>
+    </form>
   </div>
 </div>
 
 <!-- SET PASSWORD MODAL -->
-<div class="modal-overlay" id="setPwOverlay">
-  <div class="modal">
-    <div class="modal-header"><h3 class="gradient-text">Set Your Password</h3><button class="modal-close" id="setPwClose">&times;</button></div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--text2)">Your password was reset. Please create a new one.</p>
-      <form id="setPwForm">
-        <div class="form-group"><label>Password</label><input type="password" id="setPwPassword" required minlength="4"></div>
-        <div class="form-group"><label>Confirm Password</label><input type="password" id="setPwConfirm" required minlength="4"></div>
-        <button type="submit" class="btn btn-glow btn-full">Set Password</button>
-        <p class="form-msg" id="setPwMsg"></p>
-      </form>
-    </div>
+<div class="modal-overlay" id="setPasswordOverlay">
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="set_pw_title">Set Your Password</h3><button class="modal-close" id="setPwClose">&times;</button></div>
+    <p class="modal-desc" data-i18n="set_pw_desc">Your password was reset. Please create a new one.</p>
+    <form id="setPasswordForm">
+      <div class="form-group"><label data-i18n="reg_password">Password</label><input type="password" id="setPwPassword" required minlength="4" placeholder="Min 4 characters"></div>
+      <div class="form-group"><label data-i18n="reg_password_confirm">Confirm Password</label><input type="password" id="setPwPasswordConfirm" required minlength="4"></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="set_pw_submit">Set Password</button>
+      <p class="form-msg" id="setPwMsg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="changePasswordOverlay">
+  <div class="glass-card modal">
+    <div class="modal-header"><h3 class="gradient-text" data-i18n="chg_pw_title">Change Password</h3><button class="modal-close" id="chgPwClose">&times;</button></div>
+    <form id="changePasswordForm">
+      <div class="form-group"><label data-i18n="chg_pw_current">Current Password</label><input type="password" id="chgPwCurrent" required></div>
+      <div class="form-group"><label data-i18n="chg_pw_new">New Password</label><input type="password" id="chgPwNew" required minlength="4"></div>
+      <div class="form-group"><label data-i18n="chg_pw_confirm">Confirm New Password</label><input type="password" id="chgPwConfirm" required minlength="4"></div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="chg_pw_submit">Change</button>
+      <p class="form-msg" id="chgPwMsg"></p>
+    </form>
   </div>
 </div>
 
 <!-- PREDICT MODAL -->
 <div class="modal-overlay" id="predictOverlay">
-  <div class="modal">
+  <div class="glass-card modal">
     <div class="modal-header"><h3 class="gradient-text" id="predictTitle">Prediction</h3><button class="modal-close" id="predictClose">&times;</button></div>
-    <div class="modal-body">
-      <form id="predictForm">
-        <input type="hidden" id="predMatchId">
-        <div class="predict-score">
-          <div class="predict-team" id="predTeamA">Team A</div>
-          <input type="number" id="predScoreA" min="0" max="20" required class="score-input" placeholder="0">
-          <span class="score-vs">vs</span>
-          <input type="number" id="predScoreB" min="0" max="20" required class="score-input" placeholder="0">
-          <div class="predict-team" id="predTeamB">Team B</div>
-        </div>
-        <button type="submit" class="btn btn-glow btn-full">Submit Prediction</button>
-        <p class="form-msg" id="predictMsg"></p>
-      </form>
-    </div>
+    <form id="predictForm">
+      <input type="hidden" id="predPartidoId">
+      <div class="predict-score">
+        <div class="predict-team" id="predLocal">Local</div>
+        <input type="number" id="predGolLocal" min="0" max="20" required class="score-input">
+        <span class="score-vs">vs</span>
+        <input type="number" id="predGolVisitante" min="0" max="20" required class="score-input">
+        <div class="predict-team" id="predVisitante">Away</div>
+      </div>
+      <button type="submit" class="btn btn-glow btn-full" data-i18n="pred_submit">Submit Prediction</button>
+      <p class="form-msg" id="predictMsg"></p>
+    </form>
   </div>
 </div>
 
-<script>
-// ⁘[ CONFIG ]⁘
-const API_URL = 'https://script.google.com/macros/s/AKfycbz8n6l5VVuka3r8yJFXyNsO1i2sAKEBqolcteCx95O90y4FCpnqo66Zh4BKHRUhGCY8/exec';
-const LOCK_DATE = new Date('2026-06-25T05:59:00Z');
-const TEAMS = ['Algeria','Argentina','Australia','Austria','Belgium','Bosnia and Herzegovina','Brazil','Canada','Cape Verde','Colombia','Croatia','Curacao','Czech Republic','DR Congo','Ecuador','Egypt','England','France','Germany','Ghana','Haiti','Iran','Iraq','Ivory Coast','Japan','Jordan','Mexico','Morocco','Netherlands','New Zealand','Norway','Panama','Paraguay','Portugal','Qatar','Saudi Arabia','Scotland','Senegal','South Africa','South Korea','Spain','Sweden','Switzerland','Tunisia','Turkiye','Uruguay','USA','Uzbekistan'];
-
-// ⁘[ HELPERS ]⁘
-function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-async function hashPassword(pw){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-async function apiGet(action,params={}){const url=new URL(API_URL);url.searchParams.set('action',action);Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));return(await fetch(url)).json()}
-async function apiPost(data){return(await fetch(API_URL,{method:'POST',body:JSON.stringify(data)})).json()}
-
-// ⁘[ USER ]⁘
-function getUser(){try{return JSON.parse(localStorage.getItem('vibe_user'))}catch{return null}}
-function setUser(u){localStorage.setItem('vibe_user',JSON.stringify(u));updateUserUI()}
-function logout(){localStorage.removeItem('vibe_user');updateUserUI()}
-function updateUserUI(){
-  const u=getUser(),el=document.getElementById('navUser');
-  if(u){el.innerHTML=`<span class="user-alias">${u.alias}</span> <button class="btn btn-glass" onclick="logout()">Logout</button>`}
-  else{el.innerHTML='<button class="btn btn-glass" onclick="openLogin()">Login</button> <button class="btn btn-glow" onclick="openRegister()">Register</button>'}
-}
-
-// ⁘[ MODALS ]⁘
-function openRegister(){document.getElementById('registerOverlay').classList.add('open')}
-function openLogin(){document.getElementById('loginOverlay').classList.add('open')}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-
-document.getElementById('registerClose').onclick=()=>closeModal('registerOverlay');
-document.getElementById('loginClose').onclick=()=>closeModal('loginOverlay');
-document.getElementById('setPwClose').onclick=()=>closeModal('setPwOverlay');
-document.getElementById('predictClose').onclick=()=>closeModal('predictOverlay');
-document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open')}));
-document.getElementById('switchToLogin').onclick=(e)=>{e.preventDefault();closeModal('registerOverlay');openLogin()};
-document.getElementById('switchToRegister').onclick=(e)=>{e.preventDefault();closeModal('loginOverlay');openRegister()};
-document.getElementById('btnJoin').onclick=()=>getUser()?document.getElementById('knockout').scrollIntoView({behavior:'smooth'}):openRegister();
-
-// ⁘[ REGISTER ]⁘
-document.getElementById('registerForm').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const msg=document.getElementById('regMsg');
-  const pw=document.getElementById('regPassword').value;
-  const pw2=document.getElementById('regPasswordConfirm').value;
-  if(pw.length<4){msg.textContent='Min 4 characters';msg.className='form-msg error';return}
-  if(pw!==pw2){msg.textContent='Passwords do not match';msg.className='form-msg error';return}
-  msg.textContent='Registering...';msg.className='form-msg';
-  try{
-    const hash=await hashPassword(pw);
-    const res=await apiPost({action:'register',alias:document.getElementById('regAlias').value.trim(),nombre:document.getElementById('regNombre').value.trim(),email:document.getElementById('regEmail').value.trim(),equipo:'',password_hash:hash});
-    if(res.error){msg.textContent=res.error;msg.className='form-msg error';return}
-    setUser({id:res.id,alias:res.alias,nombre:res.nombre});
-    msg.textContent='Registered!';msg.className='form-msg success';
-    setTimeout(()=>closeModal('registerOverlay'),1000);
-  }catch{msg.textContent='Connection error';msg.className='form-msg error'}
-});
-
-// ⁘[ LOGIN ]⁘
-let _pendingAlias='';
-document.getElementById('loginForm').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const msg=document.getElementById('loginMsg');
-  const alias=document.getElementById('loginAlias').value.trim();
-  const pw=document.getElementById('loginPassword').value;
-  msg.textContent='Logging in...';msg.className='form-msg';
-  try{
-    const hash=await hashPassword(pw);
-    const res=await apiPost({action:'login',alias,password_hash:hash});
-    if(res.error){msg.textContent=res.error;msg.className='form-msg error';return}
-    if(res.needsPassword){_pendingAlias=alias;closeModal('loginOverlay');document.getElementById('setPwOverlay').classList.add('open');return}
-    setUser({id:res.id,alias:res.alias,nombre:res.nombre});
-    msg.textContent='Welcome!';msg.className='form-msg success';
-    updateChampionUI();loadLeaderboard();loadKoPredictions();
-    setTimeout(()=>closeModal('loginOverlay'),800);
-  }catch{msg.textContent='Connection error';msg.className='form-msg error'}
-});
-
-// ⁘[ SET PASSWORD ]⁘
-document.getElementById('setPwForm').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const msg=document.getElementById('setPwMsg');
-  const pw=document.getElementById('setPwPassword').value;
-  const pw2=document.getElementById('setPwConfirm').value;
-  if(pw.length<4){msg.textContent='Min 4 characters';msg.className='form-msg error';return}
-  if(pw!==pw2){msg.textContent='Passwords do not match';msg.className='form-msg error';return}
-  try{
-    const hash=await hashPassword(pw);
-    const res=await apiPost({action:'setPassword',alias:_pendingAlias,password_hash:hash});
-    if(res.error){msg.textContent=res.error;msg.className='form-msg error';return}
-    setUser({id:res.id,alias:res.alias,nombre:res.nombre});
-    msg.textContent='Password set!';msg.className='form-msg success';
-    setTimeout(()=>closeModal('setPwOverlay'),800);
-  }catch{msg.textContent='Connection error';msg.className='form-msg error'}
-});
-
-// ⁘[ COUNTDOWN ]⁘
-function startCountdown(){
-  const target=new Date('2026-06-11T00:00:00-06:00');
-  function tick(){
-    const diff=Math.max(0,target-new Date());
-    if(diff===0){document.getElementById('countdown').innerHTML='<div style="font-size:16px;color:var(--purple);font-weight:700">The World Cup has started!</div>';return}
-    document.getElementById('cdDays').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
-    document.getElementById('cdHours').textContent=String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
-    document.getElementById('cdMins').textContent=String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
-    document.getElementById('cdSecs').textContent=String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-  }
-  tick();setInterval(tick,1000);
-}
-
-function startChampionCountdown(){
-  const el=document.getElementById('champCountdown');
-  function tick(){
-    const diff=Math.max(0,LOCK_DATE-new Date());
-    if(diff===0){el.textContent='Champion picks are locked!';return}
-    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
-    el.textContent='Locks in: '+(d>0?d+'d ':'')+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  }
-  tick();setInterval(tick,1000);
-}
-
-// ⁘[ CHAMPION ]⁘
-function isLocked(){return new Date()>=LOCK_DATE}
-function populateTeams(){const sel=document.getElementById('championSelect');TEAMS.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o)})}
-async function updateChampionUI(){
-  const locked=isLocked(),u=getUser();
-  document.getElementById('championLocked').style.display=locked?'':'none';
-  document.getElementById('championSelect').disabled=locked||!u;
-  document.getElementById('btnChampion').disabled=locked||!u;
-  if(!u){document.getElementById('championCurrent').textContent='';return}
-  try{const res=await apiGet('getChampion',{pid:u.id});const cur=document.getElementById('championCurrent');if(res.equipo){cur.innerHTML='Your pick: <strong>'+esc(res.equipo)+'</strong>';document.getElementById('championSelect').value=res.equipo}else cur.textContent='No pick yet'}catch{}
-}
-document.getElementById('btnChampion').addEventListener('click',async()=>{
-  const u=getUser();if(!u){openLogin();return}
-  const team=document.getElementById('championSelect').value;if(!team)return;
-  const msg=document.getElementById('championMsg');
-  msg.textContent='Saving...';msg.className='form-msg';
-  try{
-    const res=await apiPost({action:'saveChampion',pid:u.id,equipo:team});
-    if(res.error){msg.textContent=res.error;msg.className='form-msg error';return}
-    document.getElementById('championCurrent').innerHTML='Your pick: <strong>'+esc(team)+'</strong>';
-    msg.textContent='Saved!';msg.className='form-msg success';
-    setTimeout(()=>msg.textContent='',2000);
-  }catch{msg.textContent='Connection error';msg.className='form-msg error'}
-});
-
-// ⁘[ LEADERBOARD ]⁘
-async function loadLeaderboard(){
-  try{
-    const data=await apiGet('getLeaderboard'),body=document.getElementById('lbBody');
-    if(!data.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No data yet</td></tr>';return}
-    const u=getUser();
-    body.innerHTML=data.map((p,i)=>{
-      const isMe=u&&p.alias.toLowerCase()===u.alias.toLowerCase();
-      const rankClass=(i<3?'rank-'+(i+1):'')+(isMe?' me':'');
-      const crown=i===0?'👑':'';
-      const name=isMe?esc(p.alias)+'<span class="you-badge">You</span>':esc(p.alias);
-      return`<tr class="${rankClass}"><td class="rank-num">${i+1}${crown}</td><td>${name}</td><td>${p.exactos}</td><td>${p.aciertos}</td><td>${p.campeon||'—'}</td><td><strong>${p.puntos}</strong></td></tr>`;
-    }).join('');
-  }catch{document.getElementById('lbBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Error loading</td></tr>'}
-}
-
-// ⁘[ KNOCKOUT BRACKET ]⁘
-var KO_MATCHES={
-  r32l:[
-    {id:'R32L-1',a:'1E',b:'3ABCDF',info:'Jun 28 · Boston'},
-    {id:'R32L-2',a:'1I',b:'3CDFGH',info:'Jun 29 · New York'},
-    {id:'R32L-3',a:'2A',b:'2B',info:'Jun 28 · Los Angeles'},
-    {id:'R32L-4',a:'1F',b:'2C',info:'Jun 29 · Monterrey'},
-    {id:'R32L-5',a:'2L',b:'1H',info:'Jul 1 · Toronto'},
-    {id:'R32L-6',a:'2J',b:'1D',info:'Jul 1 · Los Angeles'},
-    {id:'R32L-7',a:'3BEFIJ',b:'1G',info:'Jul 2 · San Francisco'},
-    {id:'R32L-8',a:'3AEHIJ',b:'1K',info:'Jul 1 · Seattle'}
-  ],
-  r16l:[
-    {id:'R16L-1',a:'W R32L-1',b:'W R32L-2',info:'Jul 4 · Philadelphia'},
-    {id:'R16L-2',a:'W R32L-3',b:'W R32L-4',info:'Jul 4 · Houston'},
-    {id:'R16L-3',a:'W R32L-5',b:'W R32L-6',info:'Jul 6 · Dallas'},
-    {id:'R16L-4',a:'W R32L-7',b:'W R32L-8',info:'Jul 6 · Seattle'}
-  ],
-  qfl:[
-    {id:'QFL-1',a:'W R16L-1',b:'W R16L-2',info:'Jul 9 · Boston'},
-    {id:'QFL-2',a:'W R16L-3',b:'W R16L-4',info:'Jul 10 · Los Angeles'}
-  ],
-  semil:[{id:'SFL-1',a:'W QFL-1',b:'W QFL-2',info:'Jul 14 · Dallas'}],
-  semir:[{id:'SFR-1',a:'W QFR-1',b:'W QFR-2',info:'Jul 15 · Atlanta'}],
-  qfr:[
-    {id:'QFR-1',a:'W R16R-1',b:'W R16R-2',info:'Jul 11 · Miami'},
-    {id:'QFR-2',a:'W R16R-3',b:'W R16R-4',info:'Jul 12 · Kansas City'}
-  ],
-  r16r:[
-    {id:'R16R-1',a:'W R32R-1',b:'W R32R-2',info:'Jul 5 · New York'},
-    {id:'R16R-2',a:'W R32R-3',b:'W R32R-4',info:'Jul 5 · Mexico City'},
-    {id:'R16R-3',a:'W R32R-5',b:'W R32R-6',info:'Jul 7 · Vancouver'},
-    {id:'R16R-4',a:'W R32R-7',b:'W R32R-8',info:'Jul 7 · Atlanta'}
-  ],
-  r32r:[
-    {id:'R32R-1',a:'1C',b:'2F',info:'Jun 29 · Houston'},
-    {id:'R32R-2',a:'2E',b:'2I',info:'Jun 30 · Dallas'},
-    {id:'R32R-3',a:'1A',b:'3CEFHI',info:'Jun 30 · Mexico City'},
-    {id:'R32R-4',a:'1L',b:'3EHIJK',info:'Jul 1 · Atlanta'},
-    {id:'R32R-5',a:'1J',b:'2H',info:'Jul 3 · Miami'},
-    {id:'R32R-6',a:'2G',b:'2D',info:'Jul 3 · Dallas'},
-    {id:'R32R-7',a:'1B',b:'3EFGIJ',info:'Jul 2 · Vancouver'},
-    {id:'R32R-8',a:'1K',b:'3DEIJL',info:'Jul 3 · Kansas City'}
-  ]
-};
-var KO_OPEN={'r32l':true,'r32r':true}; // only R32 open
-var koPreds={};
-
-function renderBracket(){
-  var keys=['r32l','r16l','qfl','semil','semir','qfr','r16r','r32r'];
-  keys.forEach(function(key){
-    var container=document.getElementById(key);
-    if(!container)return;
-    container.innerHTML='';
-    var open=KO_OPEN[key]||false;
-    (KO_MATCHES[key]||[]).forEach(function(m){
-      var pred=koPreds[m.id];
-      var card=document.createElement('div');
-      card.className='matchup'+(!open?' locked':'')+(pred?' predicted':'');
-      card.innerHTML=
-        '<div class="matchup__teams">'+
-          '<div class="matchup__team">'+esc(m.a)+'</div>'+
-          '<span class="matchup__vs">vs</span>'+
-          '<div class="matchup__team">'+esc(m.b)+'</div>'+
-        '</div>'+
-        '<div class="matchup__info">'+esc(m.info)+'</div>'+
-        (pred?'<div class="matchup__pred">'+pred.a+' - '+pred.b+'</div>':'')+
-        '<div class="matchup__status '+(open?'open':'coming')+'">'+(open?(pred?'PREDICTED':'OPEN'):'COMING SOON')+'</div>';
-      if(open)card.addEventListener('click',function(){openKoPredict(m)});
-      container.appendChild(card);
-    });
-  });
-}
-
-async function loadKoPredictions(){
-  var u=getUser();
-  if(!u){renderBracket();return}
-  try{
-    var preds=await apiGet('getPredicciones',{pid:u.id});
-    koPreds={};
-    preds.forEach(function(p){
-      if(p.partido_id&&/^(R32|R16|QF|SF|FINAL)/.test(p.partido_id)){
-        koPreds[p.partido_id]={a:Number(p.gol_local),b:Number(p.gol_visitante)};
-      }
-    });
-  }catch(e){koPreds={}}
-  renderBracket();
-}
-
-function openKoPredict(m){
-  if(!getUser()){openLogin();return}
-  document.getElementById('predMatchId').value=m.id;
-  document.getElementById('predTeamA').textContent=m.a;
-  document.getElementById('predTeamB').textContent=m.b;
-  document.getElementById('predictTitle').textContent=m.a+' vs '+m.b;
-  var ex=koPreds[m.id];
-  document.getElementById('predScoreA').value=ex?ex.a:'';
-  document.getElementById('predScoreB').value=ex?ex.b:'';
-  document.getElementById('predictMsg').textContent='';
-  document.getElementById('predictOverlay').classList.add('open');
-}
-
-document.getElementById('predictForm').addEventListener('submit',async function(e){
-  e.preventDefault();
-  var msg=document.getElementById('predictMsg');
-  var id=document.getElementById('predMatchId').value;
-  var a=document.getElementById('predScoreA').value;
-  var b=document.getElementById('predScoreB').value;
-  if(a===''||b===''){msg.textContent='Enter both scores';msg.className='form-msg error';return}
-  msg.textContent='Saving...';msg.className='form-msg';
-  var u=getUser();
-  try{
-    await apiPost({action:'predict',pid:u.id,partido_id:id,gol_local:Number(a),gol_visitante:Number(b)});
-    koPreds[id]={a:Number(a),b:Number(b)};
-    msg.textContent='Saved!';msg.className='form-msg success';
-    setTimeout(function(){closeModal('predictOverlay');renderBracket()},600);
-  }catch{msg.textContent='Connection error';msg.className='form-msg error'}
-});
-
-// nav scroll spy
-const sections=document.querySelectorAll('section[id]'),navLinks=document.querySelectorAll('.nav-link');
-window.addEventListener('scroll',function(){
-  let cur='';
-  sections.forEach(s=>{if(window.scrollY>=s.offsetTop-100)cur=s.id});
-  navLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+cur));
-});
-
-// particles
-(function(){
-  var pc=document.getElementById('particles');
-  for(var i=0;i<20;i++){
-    var d=document.createElement('div');d.className='particle';
-    d.style.left=Math.random()*100+'%';
-    d.style.animationDuration=8+Math.random()*12+'s';
-    d.style.animationDelay=Math.random()*10+'s';
-    d.style.width=d.style.height=1+Math.random()*2+'px';
-    d.style.opacity=0.15+Math.random()*0.2;
-    pc.appendChild(d);
-  }
-})();
-
-// ⁘[ INIT ]⁘
-startCountdown();startChampionCountdown();populateTeams();updateUserUI();updateChampionUI();loadLeaderboard();loadKoPredictions();
-</script>
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand"><img src="vibe-logo.png" alt="VIBE" class="footer-logo"></div>
+    <div class="footer-copy">VIBE TSE - Visibility | Information | Bridge | Engagement</div>
+  </div>
+</footer>
+<button class="back-to-top" id="backToTop" aria-label="Back to top">&#8593;</button>
+<script src="script.js"></script>
 </body>
 </html>

@@ -2,9 +2,6 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbz8n6l5VVuka3r8yJFXyNsO1i2sAKEBqolcteCx95O90y4FCpnqo66Zh4BKHRUhGCY8/exec';
 const LOCK_DATE = new Date('2026-06-25T05:59:00Z'); // Jun 24 23:59 CST (Costa Rica)
 
-// helpers
-function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
 // 48 teams
 const TEAMS = ['Algeria','Argentina','Australia','Austria','Belgium','Bosnia and Herzegovina','Brazil','Canada','Cape Verde','Colombia','Croatia','Curacao','Czech Republic','DR Congo','Ecuador','Egypt','England','France','Germany','Ghana','Haiti','Iran','Iraq','Ivory Coast','Japan','Jordan','Mexico','Morocco','Netherlands','New Zealand','Norway','Panama','Paraguay','Portugal','Qatar','Saudi Arabia','Scotland','Senegal','South Africa','South Korea','Spain','Sweden','Switzerland','Tunisia','Turkiye','Uruguay','USA','Uzbekistan'];
 
@@ -144,6 +141,18 @@ function openSetPassword() { document.getElementById('setPasswordOverlay').class
 function closeSetPassword() { document.getElementById('setPasswordOverlay').classList.remove('open'); }
 function openChangePassword() { document.getElementById('changePasswordOverlay').classList.add('open'); }
 function closeChangePassword() { document.getElementById('changePasswordOverlay').classList.remove('open'); }
+function openPredict(p) {
+  if (!getUser()) { openLogin(); return; }
+  document.getElementById('predPartidoId').value = p.partido_id;
+  document.getElementById('predLocal').textContent = p.local;
+  document.getElementById('predVisitante').textContent = p.visitante;
+  document.getElementById('predictTitle').textContent = `${p.local} vs ${p.visitante}`;
+  const existing = userPredictions[p.partido_id];
+  document.getElementById('predGolLocal').value = existing ? existing.gol_local : '';
+  document.getElementById('predGolVisitante').value = existing ? existing.gol_visitante : '';
+  document.getElementById('predictMsg').textContent = '';
+  document.getElementById('predictOverlay').classList.add('open');
+}
 function closePredict() { document.getElementById('predictOverlay').classList.remove('open'); }
 
 // register
@@ -232,7 +241,24 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
-// predict (knockout only — handled by bracket IIFE below)
+// predict
+document.getElementById('predictForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const u = getUser(); if (!u) { openLogin(); return; }
+  const msg = document.getElementById('predictMsg');
+  const partidoId = document.getElementById('predPartidoId').value;
+  const golL = Number(document.getElementById('predGolLocal').value);
+  const golV = Number(document.getElementById('predGolVisitante').value);
+  msg.textContent = t('sending'); msg.className = 'form-msg';
+  try {
+    const res = await apiPost({ action:'predict', pid:u.id, partido_id:partidoId, gol_local:golL, gol_visitante:golV });
+    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    userPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
+    renderPartidos(getFilteredPartidos());
+    msg.textContent = t('saved'); msg.className = 'form-msg success';
+    setTimeout(closePredict, 1000);
+  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
+});
 
 // champion
 function isLocked() { return new Date() >= LOCK_DATE; }
@@ -272,7 +298,122 @@ document.getElementById('btnChampion').addEventListener('click', async () => {
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
-// partidos removed — knockout is the main prediction system
+// partidos
+let allPartidos = [];
+let activeFilter = 'all';
+let activeSort = 'date';
+let userPredictions = {}; // { partido_id: { gol_local, gol_visitante } }
+
+async function loadUserPredictions() {
+  const u = getUser(); if (!u) { userPredictions = {}; return; }
+  try {
+    const preds = await apiGet('getPredicciones', { pid: u.id });
+    userPredictions = {};
+    preds.forEach(p => { userPredictions[p.partido_id] = { gol_local: p.gol_local, gol_visitante: p.gol_visitante }; });
+  } catch { userPredictions = {}; }
+}
+
+function getFilteredPartidos() {
+  let list = activeFilter === 'all' ? [...allPartidos] : allPartidos.filter(p => p.status === activeFilter);
+  if (activeSort === 'group') list.sort((a, b) => a.grupo.localeCompare(b.grupo) || a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
+  return list;
+}
+async function loadPartidos() {
+  try {
+    allPartidos = await apiGet('getPartidos');
+    await loadUserPredictions();
+    renderPartidos(getFilteredPartidos());
+  } catch { document.getElementById('partidosGrid').innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
+}
+function formatFecha(f) { if (!f) return ''; const parts = f.match(/(\d{4})-(\d{2})-(\d{2})/); if (!parts) return f; const d = new Date(+parts[1], +parts[2]-1, +parts[3]); return d.toLocaleDateString(lang === 'es' ? 'es-CR' : 'en-US', { month:'short', day:'numeric' }); }
+function formatHora(h) { if (!h) return ''; const m = String(h).match(/(\d{2}:\d{2})/); return m ? m[1] + ' CST' : h; }
+function getMatchDeadline(p) {
+  // deadline = match time - 1 hour (CST, same as stored hours)
+  var parts = p.fecha.match(/(\d{4})-(\d{2})-(\d{2})/);
+  var hParts = (p.hora || '').match(/(\d{2}):(\d{2})/);
+  if (!parts || !hParts) return null;
+  return new Date(+parts[1], +parts[2]-1, +parts[3], +hParts[1]-1, +hParts[2]);
+}
+
+function getBettingStatus(p) {
+  if (p.status === 'finalizado') return { state: 'finished' };
+  var deadline = getMatchDeadline(p);
+  if (!deadline) return { state: 'open' };
+  var now = new Date();
+  var diff = deadline - now;
+  if (diff <= 0) return { state: 'closed' };
+  if (diff <= 12 * 3600000) {
+    var h = Math.floor(diff / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    return { state: 'closing', label: h > 0 ? h + 'h ' + m + 'm' : m + 'm' };
+  }
+  return { state: 'open' };
+}
+
+function calcPoints(pred, p) {
+  if (!pred || p.status !== 'finalizado' || p.gol_local === '' || p.gol_visitante === '') return null;
+  var rL = Number(p.gol_local), rV = Number(p.gol_visitante);
+  var pL = Number(pred.gol_local), pV = Number(pred.gol_visitante);
+  if (pL === rL && pV === rV) return { pts: 5, label: '+5 Exact!' };
+  var realW = rL > rV ? 'L' : rL < rV ? 'V' : 'E';
+  var predW = pL > pV ? 'L' : pL < pV ? 'V' : 'E';
+  if (predW === realW) return { pts: 2, label: '+2 Correct winner' };
+  return { pts: 0, label: 'No points' };
+}
+
+function renderPartidos(partidos) {
+  const grid = document.getElementById('partidosGrid');
+  if (!partidos.length) { grid.innerHTML = `<div class="glass-card partido-card"><p class="placeholder-text">${t('loading')}</p></div>`; return; }
+  grid.innerHTML = partidos.map(p => {
+    const pred = userPredictions[p.partido_id];
+    const bet = getBettingStatus(p);
+    const pts = calcPoints(pred, p);
+    const isClosed = bet.state === 'closed' || bet.state === 'finished';
+
+    // status badge
+    var statusBadge = '';
+    if (p.status === 'finalizado') statusBadge = '<span class="partido-status finalizado">Final</span>';
+    else statusBadge = '<span class="partido-status pendiente">Score Pending</span>';
+
+    // prediction + points line
+    var predLine = '';
+    if (pred) {
+      predLine = `<div class="partido-prediction">${t('your_pred')}: ${pred.gol_local} - ${pred.gol_visitante}`;
+      if (pts) predLine += ` <span class="pts-badge pts-badge--${pts.pts}">${pts.label}</span>`;
+      predLine += '</div>';
+    }
+
+    // betting status line
+    var betLine = '';
+    if (bet.state === 'open') betLine = '<div class="partido-bet partido-bet--open">Open</div>';
+    else if (bet.state === 'closing') betLine = `<div class="partido-bet partido-bet--closing">Closes in ${bet.label}</div>`;
+    else if (bet.state === 'closed') betLine = '<div class="partido-bet partido-bet--closed">Betting Closed</div>';
+
+    var cardClass = 'glass-card partido-card' + (isClosed ? ' partido-card--locked' : '');
+    var onclick = isClosed ? '' : `onclick='openPredict(${JSON.stringify(p)})'`;
+
+    return `
+    <div class="${cardClass}" ${onclick}>
+      <div class="partido-header"><span class="partido-fase">${p.fase} ${p.grupo||''}</span>${statusBadge}</div>
+      <div class="partido-teams"><div class="partido-team">${p.local}</div>${p.status==='finalizado'?`<div class="partido-score">${p.gol_local} - ${p.gol_visitante}</div>`:'<div class="partido-vs">vs</div>'}<div class="partido-team">${p.visitante}</div></div>
+      <div class="partido-date">${formatFecha(p.fecha)} - ${formatHora(p.hora)}</div>
+      ${betLine}
+      ${predLine}
+    </div>`;
+  }).join('');
+}
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); activeFilter = btn.dataset.filter; renderPartidos(getFilteredPartidos());
+  });
+});
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); activeSort = btn.dataset.sort; renderPartidos(getFilteredPartidos());
+  });
+});
 
 // leaderboard
 async function loadLeaderboard() {
@@ -338,194 +479,171 @@ window.addEventListener('scroll', () => backToTop.classList.toggle('visible', wi
 backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 // refresh betting status every 60s
-setInterval(() => { /* knockout auto-refresh placeholder */ }, 60000);
+setInterval(() => { if (allPartidos.length) renderPartidos(getFilteredPartidos()); }, 60000);
 
 // init
-startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadLeaderboard();
+startCountdown(); startChampionCountdown(); populateTeams(); setLang(lang); updateUserUI(); updateChampionUI(); loadPartidos(); loadLeaderboard(); loadKnockout();
 
-// knockout bracket (interactive)
-(function() {
-  var grid = document.getElementById('bracketGrid');
-  if (!grid) return;
+// ⁘[ KNOCKOUT BRACKET ]⁘
+// lee getPartidos y filtra por fase para construir el bracket dinamicamente
+// el array ROUND_ORDER mapea fase → columna del bracket (left o right del trophy)
+var KO_ROUND_ORDER = [
+  { key: 'r32l', label: 'Round of 32', fase: 'Round of 32', side: 'left', slots: 8 },
+  { key: 'r16l', label: 'Round of 16', fase: 'Round of 16', side: 'left', slots: 4 },
+  { key: 'qfl',  label: 'Quarter-Finals', fase: 'Quarter-Finals', side: 'left', slots: 2 },
+  { key: 'semil', label: 'Semi-Finals', fase: 'Semi-Finals', side: 'left', slots: 1 },
+  { key: 'final', label: 'Final', fase: 'Final', side: 'center', slots: 1 },
+  { key: 'semir', label: 'Semi-Finals', fase: 'Semi-Finals', side: 'right', slots: 1 },
+  { key: 'qfr',  label: 'Quarter-Finals', fase: 'Quarter-Finals', side: 'right', slots: 2 },
+  { key: 'r16r', label: 'Round of 16', fase: 'Round of 16', side: 'right', slots: 4 },
+  { key: 'r32r', label: 'Round of 32', fase: 'Round of 32', side: 'right', slots: 8 }
+];
+var koPredictions = {};
 
-  // real bracket data ~ FIFA 2026 knockout structure
-  var KO_MATCHES = {
-    r32l: [
-      {id:'R32L-1',a:'1E',b:'3ABCDF',info:'Jun 28 · Boston'},
-      {id:'R32L-2',a:'1I',b:'3CDFGH',info:'Jun 29 · New York'},
-      {id:'R32L-3',a:'2A',b:'2B',info:'Jun 28 · Los Angeles'},
-      {id:'R32L-4',a:'1F',b:'2C',info:'Jun 29 · Monterrey'},
-      {id:'R32L-5',a:'2L',b:'1H',info:'Jul 1 · Toronto'},
-      {id:'R32L-6',a:'2J',b:'1D',info:'Jul 1 · Los Angeles'},
-      {id:'R32L-7',a:'3BEFIJ',b:'1G',info:'Jul 2 · San Francisco'},
-      {id:'R32L-8',a:'3AEHIJ',b:'1K',info:'Jul 1 · Seattle'}
-    ],
-    r16l: [
-      {id:'R16L-1',a:'W R32L-1',b:'W R32L-2',info:'Jul 4 · Philadelphia'},
-      {id:'R16L-2',a:'W R32L-3',b:'W R32L-4',info:'Jul 4 · Houston'},
-      {id:'R16L-3',a:'W R32L-5',b:'W R32L-6',info:'Jul 6 · Dallas'},
-      {id:'R16L-4',a:'W R32L-7',b:'W R32L-8',info:'Jul 6 · Seattle'}
-    ],
-    qfl: [
-      {id:'QFL-1',a:'W R16L-1',b:'W R16L-2',info:'Jul 9 · Boston'},
-      {id:'QFL-2',a:'W R16L-3',b:'W R16L-4',info:'Jul 10 · Los Angeles'}
-    ],
-    semil: [{id:'SFL-1',a:'W QFL-1',b:'W QFL-2',info:'Jul 14 · Dallas'}],
-    finalm: [{id:'FINAL',a:'W SFL-1',b:'W SFR-1',info:'Jul 19 · MetLife, NJ'}],
-    semir: [{id:'SFR-1',a:'W QFR-1',b:'W QFR-2',info:'Jul 15 · Atlanta'}],
-    qfr: [
-      {id:'QFR-1',a:'W R16R-1',b:'W R16R-2',info:'Jul 11 · Miami'},
-      {id:'QFR-2',a:'W R16R-3',b:'W R16R-4',info:'Jul 12 · Kansas City'}
-    ],
-    r16r: [
-      {id:'R16R-1',a:'W R32R-1',b:'W R32R-2',info:'Jul 5 · New York'},
-      {id:'R16R-2',a:'W R32R-3',b:'W R32R-4',info:'Jul 5 · Mexico City'},
-      {id:'R16R-3',a:'W R32R-5',b:'W R32R-6',info:'Jul 7 · Vancouver'},
-      {id:'R16R-4',a:'W R32R-7',b:'W R32R-8',info:'Jul 7 · Atlanta'}
-    ],
-    r32r: [
-      {id:'R32R-1',a:'1C',b:'2F',info:'Jun 29 · Houston'},
-      {id:'R32R-2',a:'2E',b:'2I',info:'Jun 30 · Dallas'},
-      {id:'R32R-3',a:'1A',b:'3CEFHI',info:'Jun 30 · Mexico City'},
-      {id:'R32R-4',a:'1L',b:'3EHIJK',info:'Jul 1 · Atlanta'},
-      {id:'R32R-5',a:'1J',b:'2H',info:'Jul 3 · Miami'},
-      {id:'R32R-6',a:'2G',b:'2D',info:'Jul 3 · Dallas'},
-      {id:'R32R-7',a:'1B',b:'3EFGIJ',info:'Jul 2 · Vancouver'},
-      {id:'R32R-8',a:'1K',b:'3DEIJL',info:'Jul 3 · Kansas City'}
-    ]
-  };
+async function loadKnockout() {
+  var u = getUser();
+  var partidos = [];
+  try {
+    var all = await apiGet('getPartidos');
+    var koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
+    partidos = all.filter(function(p) { return koFases.indexOf(p.fase) !== -1; });
+  } catch(e) {}
 
-  // only R32 is open ~ rest coming soon
-  var ROUND_STATUS = { r32l:'open', r16l:'locked', qfl:'locked', semil:'locked', finalm:'locked', semir:'locked', qfr:'locked', r16r:'locked', r32r:'open' };
-  var ROUND_LABELS = { r32l:'Round of 32', r16l:'Round of 16', qfl:'Quarter-Finals', semil:'Semi-Finals', finalm:'Final', semir:'Semi-Finals', qfr:'Quarter-Finals', r16r:'Round of 16', r32r:'Round of 32' };
-  var ROUND_ORDER = ['r32l','r16l','qfl','semil','finalm','semir','qfr','r16r','r32r'];
-
-  var koPredictions = {};
-
-  // load predictions from API
-  async function loadKoPredictions() {
-    var u = getUser(); if (!u) { koPredictions = {}; renderBracket(); return; }
+  if (u) {
     try {
       var preds = await apiGet('getPredicciones', { pid: u.id });
       koPredictions = {};
-      // knockout predictions have partido_id starting with R32/R16/QF/SF/FINAL
-      preds.forEach(function(p) {
-        if (p.partido_id && p.partido_id.match(/^(R32|R16|QF|SF|FINAL)/)) {
-          koPredictions[p.partido_id] = { gol_a: Number(p.gol_local), gol_b: Number(p.gol_visitante) };
-        }
-      });
-    } catch(e) { koPredictions = {}; }
-    renderBracket();
+      preds.forEach(function(p) { koPredictions[p.partido_id] = { gol_local: Number(p.gol_local), gol_visitante: Number(p.gol_visitante) }; });
+    } catch(e) {}
   }
 
-  // save prediction to API
-  async function saveKoPrediction(matchId, golA, golB) {
-    var u = getUser(); if (!u) return;
-    koPredictions[matchId] = { gol_a: golA, gol_b: golB };
-    try {
-      await apiPost({ action:'predict', pid:u.id, partido_id:matchId, gol_local:golA, gol_visitante:golB });
-    } catch(e) { console.error('ko save failed:', e); }
+  renderKnockout(partidos);
+}
+
+function renderKnockout(partidos) {
+  var grid = document.getElementById('bracketGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // index partidos by fase + side for lookup
+  // side stored as 'left_side' column: 'yes'=left, 'no'=right, 'center'=final
+  function sideOf(p) {
+    if (p.left_side === 'center' || p.fase === 'Final') return 'center';
+    return p.left_side === 'yes' ? 'left' : 'right';
   }
 
-  function renderBracket() {
-    grid.innerHTML = '';
-    ROUND_ORDER.forEach(function(key) {
-      var col = document.createElement('div');
-      var isFinal = key === 'finalm';
-      col.className = 'ko-round' + (isFinal ? ' ko-final-col' : '');
+  KO_ROUND_ORDER.forEach(function(round) {
+    var col = document.createElement('div');
+    col.className = 'ko-round' + (round.side === 'center' ? ' ko-final-col' : '');
 
-      var header = document.createElement('div');
-      header.className = 'ko-round-header';
-      header.textContent = ROUND_LABELS[key];
-      col.appendChild(header);
+    var header = document.createElement('div');
+    header.className = 'ko-round-header';
+    header.textContent = round.label;
+    col.appendChild(header);
 
-      if (isFinal) {
-        var trophy = document.createElement('img');
-        trophy.src = 'trophy.png'; trophy.alt = 'World Cup Trophy'; trophy.className = 'ko-trophy-inner';
-        col.appendChild(trophy);
-        var label = document.createElement('div');
-        label.className = 'ko-final-label'; label.textContent = 'WORLD CHAMPIONS';
-        col.appendChild(label);
-      }
-
-      var matches = document.createElement('div');
-      matches.className = 'ko-round-matches';
-
-      KO_MATCHES[key].forEach(function(m) {
-        var isLocked = ROUND_STATUS[key] === 'locked';
-        var pred = koPredictions[m.id];
-        var card = document.createElement('div');
-        card.className = 'ko-matchup' + (isLocked ? ' ko-matchup--locked' : '') + (pred ? ' ko-matchup--predicted' : '');
-
-        var teams = document.createElement('div');
-        teams.className = 'ko-matchup__teams';
-        teams.innerHTML = '<div class="ko-matchup__team">' + esc(m.a) + '</div><span class="ko-matchup__vs">vs</span><div class="ko-matchup__team">' + esc(m.b) + '</div>';
-        card.appendChild(teams);
-
-        var info = document.createElement('div');
-        info.className = 'ko-matchup__info'; info.textContent = m.info;
-        card.appendChild(info);
-
-        if (pred) {
-          var predEl = document.createElement('div');
-          predEl.className = 'ko-matchup__pred';
-          predEl.textContent = pred.gol_a + ' - ' + pred.gol_b;
-          card.appendChild(predEl);
-        }
-
-        var status = document.createElement('div');
-        if (isLocked) { status.className = 'ko-matchup__status ko-matchup__status--locked'; status.textContent = 'COMING SOON'; }
-        else { status.className = 'ko-matchup__status ko-matchup__status--open'; status.textContent = pred ? 'PREDICTED' : 'OPEN'; }
-        card.appendChild(status);
-
-        if (!isLocked) {
-          card.addEventListener('click', function() { openKoPredict(m); });
-        }
-
-        matches.appendChild(card);
-      });
-
-      col.appendChild(matches);
+    if (round.side === 'center') {
+      // trophy + label, no match cards
+      var trophy = document.createElement('img');
+      trophy.src = 'trophy.png'; trophy.alt = 'Trophy'; trophy.className = 'ko-trophy-inner';
+      col.appendChild(trophy);
+      var lbl = document.createElement('div');
+      lbl.className = 'ko-final-label'; lbl.textContent = 'WORLD CHAMPIONS';
+      col.appendChild(lbl);
       grid.appendChild(col);
-    });
-  }
+      return;
+    }
 
-  // predict modal for knockout
-  function openKoPredict(m) {
-    if (!getUser()) { openLogin(); return; }
-    document.getElementById('predPartidoId').value = m.id;
-    document.getElementById('predLocal').textContent = m.a;
-    document.getElementById('predVisitante').textContent = m.b;
-    document.getElementById('predictTitle').textContent = m.a + ' vs ' + m.b;
-    var existing = koPredictions[m.id];
-    document.getElementById('predGolLocal').value = existing ? existing.gol_a : '';
-    document.getElementById('predGolVisitante').value = existing ? existing.gol_b : '';
-    document.getElementById('predictMsg').textContent = '';
-    document.getElementById('predictOverlay').classList.add('open');
+    var matchContainer = document.createElement('div');
+    matchContainer.className = 'ko-round-matches';
 
-    var form = document.getElementById('predictForm');
-    var newForm = form.cloneNode(true);
-    form.parentNode.replaceChild(newForm, form);
-
-    newForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      var msg = document.getElementById('predictMsg');
-      var golA = document.getElementById('predGolLocal').value;
-      var golB = document.getElementById('predGolVisitante').value;
-      if (golA === '' || golB === '') { msg.textContent = 'Enter both scores'; msg.className = 'form-msg error'; return; }
-      msg.textContent = t('sending'); msg.className = 'form-msg';
-      await saveKoPrediction(m.id, Number(golA), Number(golB));
-      msg.textContent = t('saved'); msg.className = 'form-msg success';
-      setTimeout(function() { closePredict(); renderBracket(); }, 600);
+    // get matches for this round + side
+    var roundMatches = partidos.filter(function(p) {
+      return p.fase === round.fase && sideOf(p) === round.side;
     });
 
-    document.getElementById('predictClose').addEventListener('click', closePredict);
-    document.getElementById('predictOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) closePredict(); });
+    // if no matches from DB yet, show placeholder slots
+    var slots = roundMatches.length || round.slots;
+    for (var i = 0; i < slots; i++) {
+      var p = roundMatches[i] || null;
+      var card = buildKoCard(p);
+      matchContainer.appendChild(card);
+    }
+
+    col.appendChild(matchContainer);
+    grid.appendChild(col);
+  });
+}
+
+function buildKoCard(p) {
+  var card = document.createElement('div');
+  var hasTeams = p && p.local && p.visitante;
+  var isOpen = p && p.status === 'pendiente' && hasTeams;
+  var isFinished = p && p.status === 'finalizado';
+  var pred = p && koPredictions[p.partido_id];
+
+  card.className = 'ko-matchup' + (isOpen ? '' : ' locked') + (pred ? ' predicted' : '');
+
+  var teamA = (p && p.local) || 'TBD';
+  var teamB = (p && p.visitante) || 'TBD';
+  var info = '';
+  if (p) info = (p.fecha ? p.fecha.slice(5).replace('-','/') : '') + (p.hora ? ' · ' + p.hora.slice(0,5) : '');
+
+  var scoreBlock = '';
+  if (isFinished && p.gol_local !== '' && p.gol_visitante !== '') {
+    scoreBlock = '<div class="ko-matchup__pred">' + p.gol_local + ' - ' + p.gol_visitante + '</div>';
+  } else if (pred) {
+    scoreBlock = '<div class="ko-matchup__pred">' + pred.gol_local + ' - ' + pred.gol_visitante + '</div>';
   }
 
-  // init knockout
-  loadKoPredictions();
-})();
+  var statusText = isOpen ? (pred ? 'PREDICTED' : 'OPEN') : (isFinished ? 'FINAL' : 'COMING SOON');
+  var statusClass = isOpen ? 'open' : 'coming';
+
+  card.innerHTML =
+    '<div class="ko-matchup__teams">' +
+      '<div class="ko-matchup__team">' + esc(teamA) + '</div>' +
+      '<span class="ko-matchup__vs">vs</span>' +
+      '<div class="ko-matchup__team">' + esc(teamB) + '</div>' +
+    '</div>' +
+    (info ? '<div class="ko-matchup__info">' + esc(info) + '</div>' : '') +
+    scoreBlock +
+    '<div class="ko-matchup__status ' + statusClass + '">' + statusText + '</div>';
+
+  if (isOpen) {
+    card.addEventListener('click', function() { openKoPredict(p); });
+  }
+  return card;
+}
+
+function openKoPredict(p) {
+  if (!getUser()) { openLogin(); return; }
+  document.getElementById('predPartidoId').value = p.partido_id;
+  document.getElementById('predLocal').textContent = p.local;
+  document.getElementById('predVisitante').textContent = p.visitante;
+  document.getElementById('predictTitle').textContent = p.local + ' vs ' + p.visitante;
+  var existing = koPredictions[p.partido_id];
+  document.getElementById('predGolLocal').value = existing ? existing.gol_local : '';
+  document.getElementById('predGolVisitante').value = existing ? existing.gol_visitante : '';
+  document.getElementById('predictMsg').textContent = '';
+  document.getElementById('predictOverlay').classList.add('open');
+}
+
+// hook the predict form for both group stage (if any) and knockout
+document.getElementById('predictForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const u = getUser(); if (!u) { openLogin(); return; }
+  const msg = document.getElementById('predictMsg');
+  const partidoId = document.getElementById('predPartidoId').value;
+  const golL = Number(document.getElementById('predGolLocal').value);
+  const golV = Number(document.getElementById('predGolVisitante').value);
+  msg.textContent = t('sending'); msg.className = 'form-msg';
+  try {
+    const res = await apiPost({ action:'predict', pid:u.id, partido_id:partidoId, gol_local:golL, gol_visitante:golV });
+    if (res.error) { msg.textContent = res.error; msg.className = 'form-msg error'; return; }
+    koPredictions[partidoId] = { gol_local: golL, gol_visitante: golV };
+    msg.textContent = t('saved'); msg.className = 'form-msg success';
+    setTimeout(closePredict, 1000);
+  } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
+});
 
 // burger menu
 (function() {
