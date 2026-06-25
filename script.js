@@ -511,27 +511,23 @@ var KO_ROUND_ORDER = [
 var koPredictions = {};
 
 async function loadKnockout() {
-  // render con placeholders inmediatamente
-  renderKnockout([]);
-
+  // si el inline script ya renderizo el bracket, no lo borramos
+  // solo cargar predicciones del usuario si esta logueado
   var u = getUser();
-  var partidos = [];
-  try {
-    var all = await apiGet('getPartidos');
-    var koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
-    partidos = all.filter(function(p) { return koFases.indexOf(p.fase) !== -1; });
-  } catch(e) { console.warn('ko: getPartidos failed', e); }
-
   if (u) {
     try {
       var preds = await apiGet('getPredicciones', { pid: u.id });
       koPredictions = {};
       preds.forEach(function(p) { koPredictions[p.partido_id] = { gol_local: Number(p.gol_local), gol_visitante: Number(p.gol_visitante) }; });
-    } catch(e) { console.warn('ko: getPredicciones failed', e); }
+    } catch(e) {}
   }
-
-  // solo re-renderizar si hay datos reales de knockout
-  if (partidos.length > 0) renderKnockout(partidos);
+  // solo re-renderizar si hay datos reales de knockout en la DB
+  try {
+    var all = await apiGet('getPartidos');
+    var koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
+    var partidos = all.filter(function(p) { return koFases.indexOf(p.fase) !== -1; });
+    if (partidos.length > 0) renderKnockout(partidos);
+  } catch(e) {}
 }
 
 function renderKnockout(partidos) {
