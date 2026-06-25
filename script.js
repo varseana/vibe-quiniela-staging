@@ -592,23 +592,43 @@ function buildKoCard(p) {
   var isOpen = p && p.status === 'pendiente' && hasTeams;
   var isFinished = p && p.status === 'finalizado';
   var pred = p && koPredictions[p.partido_id];
+  var pts = null;
 
-  card.className = 'ko-matchup' + (isOpen ? '' : ' locked') + (pred ? ' predicted' : '');
+  // calcular puntos si el partido termino y hay prediccion
+  if (isFinished && pred && p.gol_local !== '' && p.gol_visitante !== '') {
+    var rL = Number(p.gol_local), rV = Number(p.gol_visitante);
+    var pL = Number(pred.gol_local), pV = Number(pred.gol_visitante);
+    if (pL === rL && pV === rV) pts = { n: 5, label: '+5 Exact!' };
+    else {
+      var realW = rL > rV ? 'L' : rL < rV ? 'V' : 'E';
+      var predW = pL > pV ? 'L' : pL < pV ? 'V' : 'E';
+      pts = predW === realW ? { n: 2, label: '+2 Winner' } : { n: 0, label: 'No points' };
+    }
+  }
+
+  card.className = 'ko-matchup' + (isOpen ? '' : ' locked') + (pred ? ' predicted' : '') + (pts && pts.n > 0 ? ' scored' : '');
 
   var teamA = (p && p.local) || 'TBD';
   var teamB = (p && p.visitante) || 'TBD';
   var info = '';
-  if (p) info = (p.fecha ? p.fecha.slice(5).replace('-','/') : '') + (p.hora ? ' · ' + p.hora.slice(0,5) : '');
+  if (p) info = (p.fecha ? String(p.fecha).slice(0,10) : '') + (p.hora ? ' · ' + String(p.hora).slice(0,5) : '');
 
-  var scoreBlock = '';
+  // score real del partido (si terminó)
+  var realScore = '';
   if (isFinished && p.gol_local !== '' && p.gol_visitante !== '') {
-    scoreBlock = '<div class="ko-matchup__pred">' + p.gol_local + ' - ' + p.gol_visitante + '</div>';
-  } else if (pred) {
-    scoreBlock = '<div class="ko-matchup__pred">' + pred.gol_local + ' - ' + pred.gol_visitante + '</div>';
+    realScore = '<div class="ko-matchup__score">' + p.gol_local + ' - ' + p.gol_visitante + '</div>';
+  }
+
+  // prediccion del usuario
+  var predBlock = '';
+  if (pred) {
+    predBlock = '<div class="ko-matchup__pred">&#128100; ' + pred.gol_local + '-' + pred.gol_visitante;
+    if (pts) predBlock += ' <span class="ko-pts ko-pts--' + pts.n + '">' + pts.label + '</span>';
+    predBlock += '</div>';
   }
 
   var statusText = isOpen ? (pred ? 'PREDICTED' : 'OPEN') : (isFinished ? 'FINAL' : 'COMING SOON');
-  var statusClass = isOpen ? 'open' : 'coming';
+  var statusClass = isOpen ? 'open' : (isFinished ? 'final' : 'coming');
 
   card.innerHTML =
     '<div class="ko-matchup__teams">' +
@@ -617,12 +637,11 @@ function buildKoCard(p) {
       '<div class="ko-matchup__team">' + esc(teamB) + '</div>' +
     '</div>' +
     (info ? '<div class="ko-matchup__info">' + esc(info) + '</div>' : '') +
-    scoreBlock +
+    realScore +
+    predBlock +
     '<div class="ko-matchup__status ' + statusClass + '">' + statusText + '</div>';
 
-  if (isOpen) {
-    card.addEventListener('click', function() { openKoPredict(p); });
-  }
+  if (isOpen) card.addEventListener('click', function() { openKoPredict(p); });
   return card;
 }
 
