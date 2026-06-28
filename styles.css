@@ -385,10 +385,10 @@ tr.rank-3.current-user .user-alias { color: #cd7f32; }
   padding: 8px 18px; border-radius: 50px;
   background: rgba(155,48,255,0.15); border: 1px solid rgba(155,48,255,0.4);
   color: var(--vibe-purple); font-size: 12px; font-weight: 600;
-  text-decoration: none; transition: all 0.2s var(--ease);
+  text-decoration: none; cursor: pointer; transition: all 0.2s var(--ease);
   font-family: var(--font-body);
 }
-.btn-back-stage:hover { background: rgba(155,48,255,0.25); border-color: var(--vibe-purple); transform: translateX(-2px); }
+.btn-back-stage:hover { background: rgba(155,48,255,0.25); border-color: var(--vibe-purple); }
 
 /* matchup card */
 .ko-matchup {

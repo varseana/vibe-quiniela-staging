@@ -311,9 +311,11 @@ function getFilteredPartidos() {
 }
 async function loadPartidos() {
   const el = document.getElementById('partidosGrid');
-  if (!el) return; // partidos section not in this version
+  if (!el) return;
   try {
-    allPartidos = await apiGet('getPartidos');
+    const all = await apiGet('getPartidos');
+    const koFases = ['Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
+    allPartidos = all.filter(p => koFases.indexOf(p.fase) === -1);
     await loadUserPredictions();
     renderPartidos(getFilteredPartidos());
   } catch { el.innerHTML = '<div class="glass-card partido-card"><p class="placeholder-text">Error</p></div>'; }
@@ -683,7 +685,22 @@ document.getElementById('predictForm').addEventListener('submit', async (e) => {
   } catch { msg.textContent = t('conn_err'); msg.className = 'form-msg error'; }
 });
 
-// burger menu
+// ⁘[ GROUP STAGE TOGGLE ]⁘
+(function() {
+  var btn = document.getElementById('btnToggleGroupStage');
+  var bracketView = document.getElementById('knockoutBracketView');
+  var groupView = document.getElementById('groupStageView');
+  if (!btn) return;
+  var showingGroup = false;
+  var loaded = false;
+  btn.addEventListener('click', function() {
+    showingGroup = !showingGroup;
+    bracketView.style.display = showingGroup ? 'none' : '';
+    groupView.style.display = showingGroup ? '' : 'none';
+    btn.innerHTML = showingGroup ? '&#8592; Knockout Bracket' : '&#9654; Group Stage Predictions';
+    if (showingGroup && !loaded) { loaded = true; loadPartidos(); }
+  });
+})();
 (function() {
   var burger = document.getElementById('burger');
   var menu = document.getElementById('mobileMenu');
